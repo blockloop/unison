@@ -4,6 +4,7 @@ import (
 	"crypto/md5"
 	"fmt"
 	"io"
+	"log"
 	"math"
 	"os"
 )
@@ -12,11 +13,11 @@ import (
 const filechunk = 8192
 
 func Checksum(path string) string {
-
 	file, err := os.Open(path)
 
 	if err != nil {
-		panic(err.Error())
+		log.Printf("couldn't checksum file %s", path)
+		return ""
 	}
 
 	defer file.Close()

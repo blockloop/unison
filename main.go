@@ -1,9 +1,11 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"log"
 	"os"
+	"path/filepath"
 
 	"github.com/streadway/amqp"
 )
@@ -147,13 +149,52 @@ func (c *Consumer) Shutdown() error {
 func handle(deliveries <-chan amqp.Delivery, done chan error) {
 	for {
 		d := <-deliveries
-		log.Printf(
-			"CONSUMER: got %dB delivery: [%v] %s",
-			len(d.Body),
-			d.DeliveryTag,
-			d.Body,
-		)
-		d.Ack(true)
+
+		var msg Change
+		if err := json.Unmarshal(d.Body, &msg); err != nil {
+			log.Printf("Could not unmarshal", string(d.Body))
+			d.Nack(false, false)
+		} else {
+			go HandleChange(&msg)
+			d.Ack(false)
+		}
 	}
 	log.Printf("CONSUMER: handle: deliveries channel closed")
+}
+
+func HandleChange(change *Change) {
+	if change.IsCreate || change.IsMod {
+		go RequestFile(change.Path)
+		return
+	}
+
+	fullPath := filepath.Join(rootDir, change.Path)
+	local, infoErr := os.Stat(fullPath)
+
+	if change.IsDelete || change.IsMove {
+		if infoErr != nil {
+			log.Println("file appears to be already deleted", change.Path, infoErr.Error())
+			return
+		}
+
+		if change.ModDate.Before(local.ModTime().UTC()) {
+			//TODO conflict??
+			log.Println("local conflict for file", change.Path)
+			return
+		}
+
+		go func() {
+			if _, err := os.Stat(fullPath); err == nil {
+				if err := os.Remove(fullPath); err != nil {
+					log.Printf("could not delete local file %s", fullPath)
+				}
+			}
+		}()
+		return
+	}
+
+}
+
+func RequestFile(path string) {
+	log.Println("requesting file %s...", path)
 }
