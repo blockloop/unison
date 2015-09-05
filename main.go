@@ -7,87 +7,49 @@ import (
 	"os"
 	"path/filepath"
 
+	"bitbucket.org/justbrettjones/unison/q"
 	"github.com/streadway/amqp"
 )
 
 var (
-	amqpURI     = "amqp://***REMOVED***@owl.rmq.cloudamqp.com/***REMOVED***" // "AMQP URI"
-	bindingKey  = ""                                                                                // "AMQP binding key"
-	consumerTag = ""                                                                                // "AMQP consumer tag (should not be blank)"
-	exchange    = "headers"
-	queueName   string
-	hostname    string
+	hostname string
+	amqpCon  *amqp.Connection
 )
 
 func init() {
-	var err error
-	hostname, err = os.Hostname()
-	if err != nil {
-		panic(err)
-	}
-	queueName = fmt.Sprintf("%s", hostname)
+	log.SetFlags(log.LstdFlags | log.Lshortfile)
 }
 
 func main() {
-	c, err := NewConsumer(amqpURI)
-	if err != nil {
-		// log.Fatalf("%s", err)
-		panic(err)
-	}
+	amqpCon = <-q.Connection()
+	go ListenForChanges(mustGetChan(amqpCon))
+	go WatchLocalChanges(mustGetChan(amqpCon))
+	go ListenForTransferRequests(mustGetChan(amqpCon))
 
 	select {}
-
-	if err := c.Shutdown(); err != nil {
-		log.Fatalf("CONSUMER: error during shutdown: %s", err)
-	}
-
+	log.Println("gracefully exiting...")
 }
 
-type Consumer struct {
-	conn    *amqp.Connection
-	channel *amqp.Channel
-	tag     string
-	done    chan error
-}
-
-func NewConsumer(amqpURI string) (*Consumer, error) {
-	c := &Consumer{
-		conn:    nil,
-		channel: nil,
-		tag:     "",
-		done:    make(chan error),
-	}
-
+func ListenForChanges(channel *amqp.Channel) {
 	var err error
-
-	log.Printf("CONSUMER: dialing %s", amqpURI)
-	c.conn, err = amqp.Dial(amqpURI)
-	if err != nil {
-		return nil, fmt.Errorf("Dial: %s", err)
-	}
-
-	log.Printf("CONSUMER: got Connection, getting Channel")
-	c.channel, err = c.conn.Channel()
-	if err != nil {
-		return nil, fmt.Errorf("Channel: %s", err)
-	}
+	hostname, _ = os.Hostname()
 
 	log.Println("CONSUMER: got Channel, declaring Exchange")
-	if err = c.channel.ExchangeDeclare(
-		exchange, // name of the exchange
-		"fanout", // type
-		true,     // durable
-		true,     // delete when complete
-		false,    // internal
-		false,    // noWait
-		nil,      // arguments
+	if err = channel.ExchangeDeclare(
+		"headers", // name of the exchange
+		"fanout",  // type
+		true,      // durable
+		true,      // delete when complete
+		false,     // internal
+		false,     // noWait
+		nil,       // arguments
 	); err != nil {
-		return nil, fmt.Errorf("Exchange Declare: %s", err)
+		panic(fmt.Errorf("Exchange Declare: %s", err))
 	}
 
-	log.Printf("CONSUMER: declared Exchange, declaring Queue (%s)", queueName)
-	state, err := c.channel.QueueDeclare(
-		queueName,    // name of the queue
+	log.Printf("CONSUMER: declared Exchange, declaring Queue (%s)", hostname)
+	state, err := channel.QueueDeclare(
+		hostname,     // name of the queue
 		true,         // durable
 		false,        // delete when usused
 		false,        // exclusive
@@ -95,58 +57,40 @@ func NewConsumer(amqpURI string) (*Consumer, error) {
 		amqp.Table{}, // arguments
 	)
 	if err != nil {
-		return nil, fmt.Errorf("Queue Declare: %s", err)
+		panic(fmt.Errorf("Queue Declare: %s", err))
 	}
 
 	log.Printf("CONSUMER: declared Queue (%d messages, %d consumers), binding to Exchange (key '%s')",
 		state.Messages, state.Consumers, "")
 
-	if err = c.channel.QueueBind(
-		queueName, // name of the queue
+	if err = channel.QueueBind(
+		hostname,  // name of the queue
 		"",        // bindingKey
 		"headers", // sourceExchange
 		false,     // noWait
 		nil,       // arguments
 	); err != nil {
-		return nil, fmt.Errorf("Queue Bind: %s", err)
+		panic(fmt.Errorf("Queue Bind: %s", err))
 	}
 
-	log.Printf("CONSUMER: Queue bound to Exchange, starting Consume (consumer tag '%s')", c.tag)
-	deliveries, err := c.channel.Consume(
-		queueName, // name
-		c.tag,     // consumerTag,
-		false,     // noAck
-		false,     // exclusive
-		false,     // noLocal
-		false,     // noWait
-		nil,       // arguments
+	log.Printf("CONSUMER: Queue bound to Exchange, starting Consume")
+	deliveries, err := channel.Consume(
+		hostname, // name
+		"",       // consumerTag,
+		false,    // noAck
+		false,    // exclusive
+		false,    // noLocal
+		false,    // noWait
+		nil,      // arguments
 	)
 	if err != nil {
-		return nil, fmt.Errorf("Queue Consume: %s", err)
+		panic(fmt.Errorf("Queue Consume: %s", err))
 	}
 
-	go handle(deliveries, c.done)
-
-	return c, nil
+	go handle(deliveries, channel)
 }
 
-func (c *Consumer) Shutdown() error {
-	// will close() the deliveries channel
-	if err := c.channel.Cancel(c.tag, true); err != nil {
-		return fmt.Errorf("Consumer cancel failed: %s", err)
-	}
-
-	if err := c.conn.Close(); err != nil {
-		return fmt.Errorf("AMQP connection close error: %s", err)
-	}
-
-	defer log.Printf("CONSUMER: AMQP shutdown OK")
-
-	// wait for handle() to exit
-	return <-c.done
-}
-
-func handle(deliveries <-chan amqp.Delivery, done chan error) {
+func handle(deliveries <-chan amqp.Delivery, channel *amqp.Channel) {
 	for {
 		d := <-deliveries
 
@@ -164,7 +108,7 @@ func handle(deliveries <-chan amqp.Delivery, done chan error) {
 
 func HandleChange(change *Change) {
 	if change.IsCreate || change.IsMod {
-		go RequestFile(change.Path)
+		go RequestFile(change)
 		return
 	}
 
@@ -186,7 +130,7 @@ func HandleChange(change *Change) {
 		go func() {
 			if _, err := os.Stat(fullPath); err == nil {
 				if err := os.Remove(fullPath); err != nil {
-					log.Printf("could not delete local file %s", fullPath)
+					log.Println("could not delete local file", fullPath)
 				}
 			}
 		}()
@@ -195,6 +139,10 @@ func HandleChange(change *Change) {
 
 }
 
-func RequestFile(path string) {
-	log.Println("requesting file %s...", path)
+func mustGetChan(con *amqp.Connection) *amqp.Channel {
+	ch, err := con.Channel()
+	if err != nil {
+		panic(err)
+	}
+	return ch
 }
