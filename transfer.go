@@ -35,9 +35,9 @@ func ListenForTransferRequests(channel *amqp.Channel) {
 
 	queue, err := channel.QueueDeclare(
 		fmt.Sprintf("%s-files", hostname), // name of the queue
-		true,  // durable
+		false, // durable
 		true,  // delete when usused
-		false, // exclusive
+		true,  // exclusive
 		false, // noWait
 		nil,   // arguments
 	)
@@ -67,7 +67,7 @@ func ListenForTransferRequests(channel *amqp.Channel) {
 	msgs, err := channel.Consume(
 		queue.Name, // queue
 		"",         // consumer
-		true,       // auto-ack
+		false,      // auto-ack
 		false,      // exclusive
 		false,      // no-local
 		false,      // no-wait
@@ -80,6 +80,7 @@ func ListenForTransferRequests(channel *amqp.Channel) {
 	go func() {
 		log.Println("awaiting file transfer requests...")
 		for d := range msgs {
+			d.Ack(false)
 			var transfer Transfer
 			log.Println("received a file transfer request", d.RoutingKey)
 
@@ -88,9 +89,7 @@ func ListenForTransferRequests(channel *amqp.Channel) {
 				d.Reject(false)
 				continue
 			}
-			log.Println("received transfer request for file:", transfer.Path)
 
-			go d.Ack(false)
 			go HandleTransfer(transfer)
 		}
 		log.Println("no longer consuming transfers")
@@ -145,6 +144,7 @@ func HandleTransfer(t Transfer) {
 
 	i := 1
 	for chunk := range ch {
+		log.Printf("sending chunk %d/%d for %s\n", i, count, t.Path)
 		err = channel.Publish(
 			"files", // exchange
 			t.Path,  // routing key
@@ -164,4 +164,19 @@ func HandleTransfer(t Transfer) {
 		}
 		i += 1
 	}
+
+	// send EOF
+	err = channel.Publish(
+		"files", // exchange
+		t.Path,  // routing key
+		false,   // mandatory
+		false,   // immediate
+		amqp.Publishing{
+			ContentType: "application/octet-stream",
+			Body:        nil,
+			Headers: amqp.Table{
+				"Order": strconv.Itoa(-1),
+				"Count": strconv.Itoa(count),
+			},
+		})
 }

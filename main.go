@@ -98,10 +98,14 @@ func handle(deliveries <-chan amqp.Delivery, channel *amqp.Channel) {
 		if err := json.Unmarshal(d.Body, &msg); err != nil {
 			log.Printf("Could not unmarshal", string(d.Body))
 			d.Nack(false, false)
-		} else {
-			go HandleChange(&msg)
-			d.Ack(false)
+			return
 		}
+		if msg.Source == hostname {
+			d.Nack(false, false)
+			return
+		}
+		go HandleChange(&msg)
+		d.Ack(false)
 	}
 	log.Printf("CONSUMER: handle: deliveries channel closed")
 }

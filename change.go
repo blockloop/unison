@@ -4,6 +4,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"os"
+	"path/filepath"
+	"strconv"
 	"time"
 
 	"bitbucket.org/justbrettjones/unison/q"
@@ -93,10 +96,11 @@ func RequestFile(change *Change) {
 }
 
 func WaitForFile(channel *amqp.Channel, filePath string, queueName string) {
+	defer channel.Close()
 	msgs, err := channel.Consume(
 		queueName, // queue
 		"",        // consumer
-		false,     // auto-ack
+		true,      // auto-ack
 		false,     // exclusive
 		false,     // no-local
 		false,     // no-wait
@@ -107,11 +111,43 @@ func WaitForFile(channel *amqp.Channel, filePath string, queueName string) {
 	}
 	log.Println("waiting for file to be transfered on queue:", filePath)
 
-	go func() {
-		defer channel.Close()
-		for {
-			d := <-msgs
-			log.Printf("received binary blob %d for %s\nBLOB: %s", d.Headers, filePath, string(d.Body))
+	fullPath := filepath.Join(rootDir, filePath)
+	file, err := os.OpenFile(fullPath, os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0600)
+	defer file.Close()
+
+	neededOrder := 1
+	stash := make(map[string][]byte)
+	for d := range msgs {
+		log.Printf("received binary blob %d for %s\nBLOB: %s", d.Headers, filePath, string(d.Body))
+		order, err := strconv.Atoi(d.Headers["Order"].(string))
+		if err != nil {
+			log.Println(fmt.Errorf("no order was present in the header for file transfer"))
+			break
 		}
-	}()
+		chunk := &FileChunk{
+			order,
+			d.Body,
+		}
+		if chunk.Order == -1 {
+			break
+		}
+		if chunk.Order == neededOrder {
+			log.Printf("writing chunk %d for file %s\n", chunk.Order, file.Name())
+			file.Write(chunk.Chunk)
+			neededOrder += 1
+		} else {
+			stash[strconv.Itoa(chunk.Order)] = chunk.Chunk
+		}
+	}
+
+	log.Println("stash has %d items in it", len(stash))
+	log.Println("finished receiving file", filePath)
+}
+
+type FileChunk struct {
+	Order int
+	Chunk []byte
+}
+
+type Stash struct {
 }
