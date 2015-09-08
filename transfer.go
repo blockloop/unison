@@ -122,24 +122,12 @@ func HandleTransfer(t Transfer) {
 	}
 	defer file.Close()
 
-	buffer := make([]byte, 1024)
 	count := int(math.Ceil(float64(info.Size()) / float64(1024)))
 
 	ch := make(chan []byte, count)
 
 	// read the file into a buffered channel
-	go func() {
-		for {
-			n, err := file.Read(buffer)
-			if err != nil && err != io.EOF {
-				panic(err)
-			}
-			if n == 0 {
-				break
-			}
-			ch <- buffer[:n]
-		}
-	}()
+	go readFile(file, ch)
 
 	channel := mustGetChan(amqpCon)
 	defer channel.Close()
@@ -182,4 +170,18 @@ func HandleTransfer(t Transfer) {
 				"Count": strconv.Itoa(count),
 			},
 		})
+}
+
+func readFile(file *os.File, ch chan []byte) {
+	buffer := make([]byte, 1024)
+	for {
+		n, err := file.Read(buffer)
+		if err != nil && err != io.EOF {
+			panic(err)
+		}
+		if n == 0 {
+			break
+		}
+		ch <- buffer[:n]
+	}
 }

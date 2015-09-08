@@ -92,6 +92,7 @@ func RequestFile(change *Change) {
 		amqp.Publishing{
 			ContentType: "application/json",
 			Body:        req,
+			ReplyTo:     t.Path,
 		})
 
 	go WaitForFile(channel, change.Path, queue.Name)

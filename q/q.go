@@ -8,8 +8,7 @@ import (
 )
 
 var (
-	// amqpURI = "amqp://***REMOVED***@owl.rmq.cloudamqp.com/***REMOVED***" // "AMQP URI"
-	amqpURI = "amqp://brett:***REMOVED***@jane" // "AMQP URI"
+	amqpURI = "amqp://***REMOVED***@owl.rmq.cloudamqp.com/***REMOVED***" // "AMQP URI"
 	con     *amqp.Connection
 	mutex   *sync.Mutex
 )
