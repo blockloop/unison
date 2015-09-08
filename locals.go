@@ -52,9 +52,9 @@ func WatchLocalChanges(channel *amqp.Channel) {
 }
 
 func connectAmqp(channel *amqp.Channel) {
-	log.Printf("PUBLISHER: got Channel, declaring %q Exchange (%q)", "fanout", "headers")
+	log.Printf("PUBLISHER: got Channel, declaring %q Exchange (%q)", "fanout", "changes")
 	if err := channel.ExchangeDeclare(
-		"headers", // name
+		"changes", // name
 		"fanout",  // type
 		true,      // durable
 		true,      // auto-deleted
@@ -68,9 +68,6 @@ func connectAmqp(channel *amqp.Channel) {
 	log.Printf("PUBLISHER: declared Exchange")
 }
 
-// This function dials, connects, declares, publishes, and tears down,
-// all in one go. In a real service, you probably want to maintain a
-// long-lived connection as state, and publish against that.
 func publish(channel *amqp.Channel, ev *fsnotify.FileEvent) error {
 	path, _ := filepath.Rel(rootDir, ev.Name)
 	log.Printf("PUBLISHER: publishing %dB path (%q)", len(path), path)
@@ -92,7 +89,7 @@ func publish(channel *amqp.Channel, ev *fsnotify.FileEvent) error {
 	}
 
 	if err := channel.Publish(
-		"headers", // publish to an exchange
+		"changes", // publish to an exchange
 		"",        // routing to 0 or more queues
 		false,     // mandatory
 		false,     // immediate

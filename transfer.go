@@ -77,23 +77,24 @@ func ListenForTransferRequests(channel *amqp.Channel) {
 		panic(fmt.Errorf("Failed to register a consumer %s", err.Error()))
 	}
 
-	go func() {
-		log.Println("awaiting file transfer requests...")
-		for d := range msgs {
-			d.Ack(false)
-			var transfer Transfer
-			log.Println("received a file transfer request", d.RoutingKey)
+	log.Println("awaiting file transfer requests...")
+	for d := range msgs {
+		d.Ack(false)
+		var transfer Transfer
+		log.Println("received a file transfer request", d.RoutingKey)
 
-			if err := json.Unmarshal(d.Body, &transfer); err != nil {
-				log.Println(fmt.Errorf("error could not unmarshal body of transfer request '%s' %s", string(d.Body), err.Error()))
-				d.Reject(false)
-				continue
-			}
-
-			go HandleTransfer(transfer)
+		if err := json.Unmarshal(d.Body, &transfer); err != nil {
+			log.Println(fmt.Errorf("error could not unmarshal body of transfer request '%s' %s", string(d.Body), err.Error()))
+			d.Reject(false)
+			continue
 		}
-		log.Println("no longer consuming transfers")
-	}()
+		if transfer.Requestor == hostname {
+			continue
+		}
+
+		go HandleTransfer(transfer)
+	}
+	log.Println("no longer consuming transfers")
 }
 
 func HandleTransfer(t Transfer) {
@@ -126,6 +127,7 @@ func HandleTransfer(t Transfer) {
 
 	ch := make(chan []byte, count)
 
+	// read the file into a buffered channel
 	go func() {
 		for {
 			n, err := file.Read(buffer)
@@ -142,6 +144,7 @@ func HandleTransfer(t Transfer) {
 	channel := mustGetChan(amqpCon)
 	defer channel.Close()
 
+	// publish each chunk
 	i := 1
 	for chunk := range ch {
 		log.Printf("sending chunk %d/%d for %s\n", i, count, t.Path)

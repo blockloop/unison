@@ -36,7 +36,7 @@ func ListenForChanges(channel *amqp.Channel) {
 
 	log.Println("CONSUMER: got Channel, declaring Exchange")
 	if err = channel.ExchangeDeclare(
-		"headers", // name of the exchange
+		"changes", // name of the exchange
 		"fanout",  // type
 		true,      // durable
 		true,      // delete when complete
@@ -66,7 +66,7 @@ func ListenForChanges(channel *amqp.Channel) {
 	if err = channel.QueueBind(
 		hostname,  // name of the queue
 		"",        // bindingKey
-		"headers", // sourceExchange
+		"changes", // sourceExchange
 		false,     // noWait
 		nil,       // arguments
 	); err != nil {
@@ -77,7 +77,7 @@ func ListenForChanges(channel *amqp.Channel) {
 	deliveries, err := channel.Consume(
 		hostname, // name
 		"",       // consumerTag,
-		false,    // noAck
+		true,     // auto-ack
 		false,    // exclusive
 		false,    // noLocal
 		false,    // noWait
@@ -87,25 +87,23 @@ func ListenForChanges(channel *amqp.Channel) {
 		panic(fmt.Errorf("Queue Consume: %s", err))
 	}
 
-	go handle(deliveries, channel)
+	go handle(deliveries)
 }
 
-func handle(deliveries <-chan amqp.Delivery, channel *amqp.Channel) {
+func handle(deliveries <-chan amqp.Delivery) {
 	for {
 		d := <-deliveries
+		d.Ack(false)
 
 		var msg Change
 		if err := json.Unmarshal(d.Body, &msg); err != nil {
 			log.Printf("Could not unmarshal", string(d.Body))
-			d.Nack(false, false)
 			return
 		}
 		if msg.Source == hostname {
-			d.Nack(false, false)
 			return
 		}
 		go HandleChange(&msg)
-		d.Ack(false)
 	}
 	log.Printf("CONSUMER: handle: deliveries channel closed")
 }
@@ -131,14 +129,11 @@ func HandleChange(change *Change) {
 			return
 		}
 
-		go func() {
-			if _, err := os.Stat(fullPath); err == nil {
-				if err := os.Remove(fullPath); err != nil {
-					log.Println("could not delete local file", fullPath)
-				}
+		if _, err := os.Stat(fullPath); err == nil {
+			if err := os.Remove(fullPath); err != nil {
+				log.Println("could not delete local file", fullPath)
 			}
-		}()
-		return
+		}
 	}
 
 }

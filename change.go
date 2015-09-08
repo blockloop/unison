@@ -7,6 +7,7 @@ import (
 	"os"
 	"path/filepath"
 	"strconv"
+	"sync"
 	"time"
 
 	"bitbucket.org/justbrettjones/unison/q"
@@ -25,9 +26,9 @@ type Change struct {
 }
 
 type Transfer struct {
-	Checksum string
-	Path     string
-	Delivery *amqp.Delivery
+	Requestor string
+	Checksum  string
+	Path      string
 }
 
 func RequestFile(change *Change) {
@@ -77,8 +78,9 @@ func RequestFile(change *Change) {
 	}
 
 	t := &Transfer{
-		Checksum: change.Checksum,
-		Path:     change.Path,
+		Checksum:  change.Checksum,
+		Path:      change.Path,
+		Requestor: hostname,
 	}
 	req, _ := json.Marshal(t)
 
@@ -112,11 +114,13 @@ func WaitForFile(channel *amqp.Channel, filePath string, queueName string) {
 	log.Println("waiting for file to be transfered on queue:", filePath)
 
 	fullPath := filepath.Join(rootDir, filePath)
-	file, err := os.OpenFile(fullPath, os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0600)
+	file, err := os.OpenFile(fullPath, os.O_WRONLY|os.O_APPEND|os.O_CREATE|os.O_TRUNC, 0600)
+	if err != nil {
+		log.Fatalf("couldn't open local file %s", fullPath, err)
+	}
 	defer file.Close()
 
-	neededOrder := 1
-	stash := make(map[string][]byte)
+	mutex := &sync.Mutex{}
 	for d := range msgs {
 		log.Printf("received binary blob %d for %s\nBLOB: %s", d.Headers, filePath, string(d.Body))
 		order, err := strconv.Atoi(d.Headers["Order"].(string))
@@ -131,16 +135,13 @@ func WaitForFile(channel *amqp.Channel, filePath string, queueName string) {
 		if chunk.Order == -1 {
 			break
 		}
-		if chunk.Order == neededOrder {
-			log.Printf("writing chunk %d for file %s\n", chunk.Order, file.Name())
-			file.Write(chunk.Chunk)
-			neededOrder += 1
-		} else {
-			stash[strconv.Itoa(chunk.Order)] = chunk.Chunk
-		}
+
+		log.Printf("writing chunk %d for file %s\n", chunk.Order, file.Name())
+		mutex.Lock()
+		file.Write(chunk.Chunk)
+		mutex.Unlock()
 	}
 
-	log.Println("stash has %d items in it", len(stash))
 	log.Println("finished receiving file", filePath)
 }
 
