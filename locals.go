@@ -10,6 +10,8 @@ import (
 	"path/filepath"
 	"time"
 
+	"bitbucket.org/justbrettjones/unison/q"
+
 	"github.com/howeyc/fsnotify"
 	"github.com/streadway/amqp"
 )
@@ -22,8 +24,11 @@ func init() {
 	rootDir = filepath.Join(os.Getenv("HOME"), "Unison")
 }
 
-func WatchLocalChanges(channel *amqp.Channel) {
-	go connectAmqp(channel)
+func WatchLocalChanges() {
+	channel := q.MustChan()
+
+	go declareExchange(channel)
+
 	watcher, err := fsnotify.NewWatcher()
 	if err != nil {
 		log.Fatal(err)
@@ -36,7 +41,7 @@ func WatchLocalChanges(channel *amqp.Channel) {
 			case ev := <-watcher.Event:
 				// log.Println("event:", ev)
 				if !ev.IsAttrib() {
-					publish(channel, ev)
+					handleChange(channel, ev)
 				}
 			case err := <-watcher.Error:
 				log.Println("PUBLISHER: error:", err)
@@ -51,7 +56,7 @@ func WatchLocalChanges(channel *amqp.Channel) {
 	}
 }
 
-func connectAmqp(channel *amqp.Channel) {
+func declareExchange(channel *amqp.Channel) {
 	log.Printf("PUBLISHER: got Channel, declaring %q Exchange (%q)", "fanout", "changes")
 	if err := channel.ExchangeDeclare(
 		"changes", // name
@@ -68,8 +73,12 @@ func connectAmqp(channel *amqp.Channel) {
 	log.Printf("PUBLISHER: declared Exchange")
 }
 
-func publish(channel *amqp.Channel, ev *fsnotify.FileEvent) error {
+func handleChange(channel *amqp.Channel, ev *fsnotify.FileEvent) error {
+	// check to see if the file is locked. If it is then break
 	path, _ := filepath.Rel(rootDir, ev.Name)
+	if FileIsLocked(path) {
+		return nil
+	}
 	log.Printf("PUBLISHER: publishing %dB path (%q)", len(path), path)
 
 	var change = &Change{
@@ -123,17 +132,4 @@ func publish(channel *amqp.Channel, ev *fsnotify.FileEvent) error {
 	}
 
 	return nil
-}
-
-// One would typically keep a channel of publishings, a sequence number, and a
-// set of unacknowledged sequence numbers and loop until the publishing channel
-// is closed.
-func confirmOne(confirms <-chan amqp.Confirmation) {
-	log.Printf("PUBLISHER: waiting for confirmation of one publishing")
-
-	if confirmed := <-confirms; confirmed.Ack {
-		log.Printf("PUBLISHER: confirmed delivery with delivery tag: %d", confirmed.DeliveryTag)
-	} else {
-		log.Printf("PUBLISHER: failed delivery of delivery tag: %d", confirmed.DeliveryTag)
-	}
 }

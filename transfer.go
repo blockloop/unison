@@ -10,17 +10,20 @@ import (
 	"path/filepath"
 	"strconv"
 
+	"bitbucket.org/justbrettjones/unison/q"
+
 	"github.com/streadway/amqp"
 )
 
 func failOnError(err error, msg string) {
 	if err != nil {
-		log.Fatalf("%s: %s", msg, err)
 		panic(fmt.Sprintf("%s: %s", msg, err))
 	}
 }
 
-func ListenForTransferRequests(channel *amqp.Channel) {
+func ListenForTransferRequests() {
+	channel := q.MustChan()
+
 	if err := channel.ExchangeDeclare(
 		"file-requests", // name of the exchange
 		"fanout",        // type
@@ -78,26 +81,27 @@ func ListenForTransferRequests(channel *amqp.Channel) {
 	}
 
 	log.Println("awaiting file transfer requests...")
-	for d := range msgs {
-		d.Ack(false)
+	for msg := range msgs {
+		msg.Ack(false)
 		var transfer Transfer
-		log.Println("received a file transfer request", d.RoutingKey)
 
-		if err := json.Unmarshal(d.Body, &transfer); err != nil {
-			log.Println(fmt.Errorf("error could not unmarshal body of transfer request '%s' %s", string(d.Body), err.Error()))
-			d.Reject(false)
+		if err := json.Unmarshal(msg.Body, &transfer); err != nil {
+			log.Println(fmt.Errorf("received a dirty transfer request '%s' %s", string(msg.Body), err.Error()))
+			msg.Reject(false)
 			continue
 		}
+
 		if transfer.Requestor == hostname {
 			continue
 		}
+		log.Println("received a file transfer request", transfer.Path)
 
-		go HandleTransfer(transfer)
+		go HandleTransfer(transfer, &msg)
 	}
 	log.Println("no longer consuming transfers")
 }
 
-func HandleTransfer(t Transfer) {
+func HandleTransfer(t Transfer, msg *amqp.Delivery) {
 	fullPath := filepath.Join(rootDir, t.Path)
 	info, err := os.Stat(fullPath)
 
@@ -117,7 +121,7 @@ func HandleTransfer(t Transfer) {
 
 	var file *os.File
 	if file, err = os.Open(fullPath); err != nil {
-		log.Fatalln("could not open file", file, err.Error())
+		panic(fmt.Errorf("could not open file %s %s", file, err.Error()))
 		return
 	}
 	defer file.Close()
@@ -129,18 +133,18 @@ func HandleTransfer(t Transfer) {
 	// read the file into a buffered channel
 	go readFile(file, ch)
 
-	channel := mustGetChan(amqpCon)
+	channel := q.MustChan()
 	defer channel.Close()
 
 	// publish each chunk
 	i := 1
 	for chunk := range ch {
-		log.Printf("sending chunk %d/%d for %s\n", i, count, t.Path)
+		log.Println("sending chunk", i)
 		err = channel.Publish(
-			"files", // exchange
-			t.Path,  // routing key
-			false,   // mandatory
-			false,   // immediate
+			"",          // exchange
+			msg.ReplyTo, // routing key
+			false,       // mandatory
+			false,       // immediate
 			amqp.Publishing{
 				ContentType: "application/octet-stream",
 				Body:        chunk,
@@ -156,12 +160,13 @@ func HandleTransfer(t Transfer) {
 		i += 1
 	}
 
+	log.Println("file transfer complete. sending EOF", t.Path)
 	// send EOF
 	err = channel.Publish(
-		"files", // exchange
-		t.Path,  // routing key
-		false,   // mandatory
-		false,   // immediate
+		"",          // exchange
+		msg.ReplyTo, // routing key
+		false,       // mandatory
+		false,       // immediate
 		amqp.Publishing{
 			ContentType: "application/octet-stream",
 			Body:        nil,
@@ -173,8 +178,9 @@ func HandleTransfer(t Transfer) {
 }
 
 func readFile(file *os.File, ch chan []byte) {
-	buffer := make([]byte, 1024)
+	off := 0
 	for {
+		buffer := make([]byte, 1024)
 		n, err := file.Read(buffer)
 		if err != nil && err != io.EOF {
 			panic(err)
@@ -183,5 +189,7 @@ func readFile(file *os.File, ch chan []byte) {
 			break
 		}
 		ch <- buffer[:n]
+		off = off + n
 	}
+	close(ch)
 }
