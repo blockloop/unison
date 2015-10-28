@@ -5,10 +5,7 @@ import (
 	"fmt"
 	"io"
 	"log"
-	"math"
 	"os"
-	"path/filepath"
-	"strconv"
 
 	"bitbucket.org/justbrettjones/unison/q"
 
@@ -102,79 +99,8 @@ func ListenForTransferRequests() {
 }
 
 func HandleTransfer(t Transfer, msg *amqp.Delivery) {
-	fullPath := filepath.Join(rootDir, t.Path)
-	info, err := os.Stat(fullPath)
-
-	if err != nil {
-		log.Println("we don't seem to have this file")
-		return
-	}
-
-	hash := Checksum(fullPath)
-
-	if hash != t.Checksum {
-		log.Printf("our file hash does not match the requested hash. Ours %s. Theirs %s", hash, t.Checksum)
-		return
-	}
-
-	log.Println("begin reading local file")
-
-	var file *os.File
-	if file, err = os.Open(fullPath); err != nil {
-		panic(fmt.Errorf("could not open file %s %s", file, err.Error()))
-		return
-	}
-	defer file.Close()
-
-	count := int(math.Ceil(float64(info.Size()) / float64(1024)))
-
-	ch := make(chan []byte, count)
-
-	// read the file into a buffered channel
-	go readFile(file, ch)
-
-	channel := q.MustChan()
-	defer channel.Close()
-
-	// publish each chunk
-	i := 1
-	for chunk := range ch {
-		log.Println("sending chunk", i)
-		err = channel.Publish(
-			"",          // exchange
-			msg.ReplyTo, // routing key
-			false,       // mandatory
-			false,       // immediate
-			amqp.Publishing{
-				ContentType: "application/octet-stream",
-				Body:        chunk,
-				Headers: amqp.Table{
-					"Order": strconv.Itoa(i),
-					"Count": strconv.Itoa(count),
-				},
-			})
-
-		if err != nil {
-			panic(fmt.Errorf("Failed to publish a message %s", err.Error()))
-		}
-		i += 1
-	}
-
-	log.Println("file transfer complete. sending EOF", t.Path)
-	// send EOF
-	err = channel.Publish(
-		"",          // exchange
-		msg.ReplyTo, // routing key
-		false,       // mandatory
-		false,       // immediate
-		amqp.Publishing{
-			ContentType: "application/octet-stream",
-			Body:        nil,
-			Headers: amqp.Table{
-				"Order": strconv.Itoa(-1),
-				"Count": strconv.Itoa(count),
-			},
-		})
+	str, _ := json.MarshalIndent(t, "", "  ")
+	log.Println("would log:", str)
 }
 
 func readFile(file *os.File, ch chan []byte) {

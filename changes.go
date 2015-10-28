@@ -76,10 +76,10 @@ func ListenForChanges() {
 	}
 
 	log.Printf("CONSUMER: Queue bound to Exchange, starting Consume")
-	deliveries, err := channel.Consume(
+	changes, err := channel.Consume(
 		hostname, // name
 		"",       // consumerTag,
-		true,     // auto-ack
+		false,    // auto-ack
 		false,    // exclusive
 		false,    // noLocal
 		false,    // noWait
@@ -89,7 +89,7 @@ func ListenForChanges() {
 		panic(fmt.Errorf("Queue Consume: %s", err))
 	}
 
-	go handle(deliveries)
+	go handle(changes)
 }
 
 func RequestFile(change *Change) {
@@ -160,15 +160,15 @@ func WaitForFile(channel *amqp.Channel, filePath string, queueName string) {
 	defer file.Close()
 
 	for {
-		d := <-msgs
-		order, err := strconv.Atoi(d.Headers["Order"].(string))
+		msg := <-msgs
+		order, err := strconv.Atoi(msg.Headers["Order"].(string))
 		if err != nil {
 			log.Println(fmt.Errorf("no order was present in the header for file transfer"))
 			break
 		}
 		chunk := &FileChunk{
 			order,
-			d.Body,
+			msg.Body,
 		}
 		if chunk.Order == -1 {
 			break
@@ -186,21 +186,21 @@ type FileChunk struct {
 	Chunk []byte
 }
 
-func handle(deliveries <-chan amqp.Delivery) {
-	for d := range deliveries {
-		d.Ack(false)
+func handle(changes <-chan amqp.Delivery) {
+	for msg := range changes {
+		msg.Ack(false)
 
-		var msg Change
-		if err := json.Unmarshal(d.Body, &msg); err != nil {
-			log.Printf("Could not unmarshal", string(d.Body))
+		var change Change
+		if err := json.Unmarshal(msg.Body, &change); err != nil {
+			log.Printf("Could not unmarshal", string(msg.Body))
 			return
 		}
-		if msg.Source == hostname {
+		if change.Source == hostname {
 			return
 		}
-		go HandleChange(&msg)
+		go HandleChange(&change)
 	}
-	log.Printf("CONSUMER: handle: deliveries channel closed")
+	log.Printf("CONSUMER: handle: changes channel closed")
 }
 
 func HandleChange(change *Change) {
