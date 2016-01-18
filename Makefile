@@ -5,10 +5,9 @@ all: vendor build
 
 .PHONY: vendor
 vendor:
-	if [[ -z "$(ls vendor/src/*)" ]] ; \
-	then \
-		gb vendor restore
-	fi;
+ifeq ("$(wildcard vendor/src/*)", "")
+	gb vendor restore
+endif
 
 .PHONY: all
 build: bin/unison
