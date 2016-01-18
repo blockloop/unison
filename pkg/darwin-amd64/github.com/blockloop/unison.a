@@ -1,1040 +1,0 @@
-!<arch>
-__.PKGDEF       0           0     0     644     71969     `
-go object darwin amd64 go1.5.3 X:none
-
-$$
-package main
-	import runtime "runtime"
-	import json "encoding/json"
-	import io "io"
-	import strconv "strconv"
-	import fmt "fmt"
-	import math "math"
-	import sync "sync"
-	import os "os"
-	import log "log"
-	import time "time"
-	import filepath "path/filepath"
-	import q "github.com/blockloop/unison/q"
-	import amqp "github.com/streadway/amqp"
-	import md5 "crypto/md5"
-	import fsnotify "github.com/howeyc/fsnotify"
-	type @"time".zone struct { @"time".name string; @"time".offset int; @"time".isDST bool }
-	type @"time".zoneTrans struct { @"time".when int64; @"time".index uint8; @"time".isstd bool; @"time".isutc bool }
-	type @"time".Location struct { @"time".name string; @"time".zone []@"time".zone; @"time".tx []@"time".zoneTrans; @"time".cacheStart int64; @"time".cacheEnd int64; @"time".cacheZone *@"time".zone }
-	func (@"time".lÂ·2 *@"time".Location "esc:0x22") String () (? string)
-	func (@"time".lÂ·2 *@"time".Location "esc:0x1") @"time".firstZoneUsed () (? bool)
-	func (@"time".lÂ·2 *@"time".Location "esc:0x12") @"time".get () (? *@"time".Location)
-	func (@"time".lÂ·6 *@"time".Location "esc:0x32") @"time".lookup (@"time".secÂ·7 int64) (@"time".nameÂ·1 string, @"time".offsetÂ·2 int, @"time".isDSTÂ·3 bool, @"time".startÂ·4 int64, @"time".endÂ·5 int64)
-	func (@"time".lÂ·2 *@"time".Location "esc:0x1") @"time".lookupFirstZone () (? int)
-	func (@"time".lÂ·4 *@"time".Location "esc:0x1") @"time".lookupName (@"time".nameÂ·5 string "esc:0x1", @"time".unixÂ·6 int64) (@"time".offsetÂ·1 int, @"time".isDSTÂ·2 bool, @"time".okÂ·3 bool)
-	type @"time".Duration int64
-	func (@"time".dÂ·2 @"time".Duration) Hours () (? float64) { var @"time".hourÂ·3 @"time".Duration; ; @"time".hourÂ·3 = @"time".dÂ·2 / @"time".Duration(0x34630b8a000); var @"time".nsecÂ·4 @"time".Duration; ; @"time".nsecÂ·4 = @"time".dÂ·2 % @"time".Duration(0x34630b8a000); return float64(@"time".hourÂ·3) + float64(@"time".nsecÂ·4) * 8190022623310637111963488201822504381538623676021880892417778544696899264837610290203272971060556344039023584360473938041055625214280336402169897364226048p-553 }
-	func (@"time".dÂ·2 @"time".Duration) Minutes () (? float64) { var @"time".minÂ·3 @"time".Duration; ; @"time".minÂ·3 = @"time".dÂ·2 / @"time".Duration(0xdf8475800); var @"time".nsecÂ·4 @"time".Duration; ; @"time".nsecÂ·4 = @"time".dÂ·2 % @"time".Duration(0xdf8475800); return float64(@"time".minÂ·3) + float64(@"time".nsecÂ·4) * 7678146209353722106395056769533233877065564876941352542109479049699919628723768656821910653339403201031675627614471533358284117434246264392176261853609984p-547 }
-	func (@"time".dÂ·2 @"time".Duration) Nanoseconds () (? int64) { return int64(@"time".dÂ·2) }
-	func (@"time".dÂ·2 @"time".Duration) Seconds () (? float64) { var @"time".secÂ·3 @"time".Duration; ; @"time".secÂ·3 = @"time".dÂ·2 / @"time".Duration(0x3b9aca00); var @"time".nsecÂ·4 @"time".Duration; ; @"time".nsecÂ·4 = @"time".dÂ·2 % @"time".Duration(0x3b9aca00); return float64(@"time".secÂ·3) + float64(@"time".nsecÂ·4) * 7198262071269114660816079141112770740375861891461678802759824945047098083990024106014198994535558872472104883612039846078596891298747423852523262413111296p-541 }
-	func (@"time".dÂ·2 @"time".Duration) String () (? string)
-	type @"time".Month int
-	func (@"time".mÂ·2 @"time".Month) String () (? string) { return @"time".months[@"time".mÂ·2 - @"time".Month(0x1)] }
-	type @"time".Weekday int
-	func (@"time".dÂ·2 @"time".Weekday) String () (? string) { return @"time".days[@"time".dÂ·2] }
-	type @"time".Time struct { @"time".sec int64; @"time".nsec int32; @"time".loc *@"time".Location }
-	func (@"time".tÂ·2 @"time".Time "esc:0x12") Add (@"time".dÂ·3 @"time".Duration) (? @"time".Time) { @"time".tÂ·2.@"time".sec += int64(@"time".dÂ·3 / @"time".Duration(0x3b9aca00)); var @"time".nsecÂ·4 int32; ; @"time".nsecÂ·4 = int32(@"time".tÂ·2.@"time".nsec) + int32(@"time".dÂ·3 % @"time".Duration(0x3b9aca00)); if @"time".nsecÂ·4 >= 0x3b9aca00 { @"time".tÂ·2.@"time".sec++; @"time".nsecÂ·4 -= 0x3b9aca00 } else { if @"time".nsecÂ·4 < 0x0 { @"time".tÂ·2.@"time".sec--; @"time".nsecÂ·4 += 0x3b9aca00 } }; @"time".tÂ·2.@"time".nsec = @"time".nsecÂ·4; return @"time".tÂ·2 }
-	func (@"time".tÂ·2 @"time".Time "esc:0x12") AddDate (@"time".yearsÂ·3 int, @"time".monthsÂ·4 int, @"time".daysÂ·5 int) (? @"time".Time)
-	func (@"time".tÂ·2 @"time".Time "esc:0x1") After (@"time".uÂ·3 @"time".Time "esc:0x1") (? bool) { return @"time".tÂ·2.@"time".sec > @"time".uÂ·3.@"time".sec || @"time".tÂ·2.@"time".sec == @"time".uÂ·3.@"time".sec && @"time".tÂ·2.@"time".nsec > @"time".uÂ·3.@"time".nsec }
-	func (@"time".tÂ·2 @"time".Time "esc:0x9") AppendFormat (@"time".bÂ·3 []byte "esc:0x1a", @"time".layoutÂ·4 string "esc:0x9") (? []byte)
-	func (@"time".tÂ·2 @"time".Time "esc:0x1") Before (@"time".uÂ·3 @"time".Time "esc:0x1") (? bool) { return @"time".tÂ·2.@"time".sec < @"time".uÂ·3.@"time".sec || @"time".tÂ·2.@"time".sec == @"time".uÂ·3.@"time".sec && @"time".tÂ·2.@"time".nsec < @"time".uÂ·3.@"time".nsec }
-	func (@"time".tÂ·4 @"time".Time "esc:0x1") Clock () (@"time".hourÂ·1 int, @"time".minÂ·2 int, @"time".secÂ·3 int)
-	func (@"time".tÂ·4 @"time".Time "esc:0x1") Date () (@"time".yearÂ·1 int, @"time".monthÂ·2 @"time".Month, @"time".dayÂ·3 int)
-	func (@"time".tÂ·2 @"time".Time "esc:0x1") Day () (? int)
-	func (@"time".tÂ·2 @"time".Time "esc:0x1") Equal (@"time".uÂ·3 @"time".Time "esc:0x1") (? bool) { return @"time".tÂ·2.@"time".sec == @"time".uÂ·3.@"time".sec && @"time".tÂ·2.@"time".nsec == @"time".uÂ·3.@"time".nsec }
-	func (@"time".tÂ·2 @"time".Time "esc:0x9") Format (@"time".layoutÂ·3 string "esc:0x9") (? string)
-	func (@"time".tÂ·2 *@"time".Time "esc:0x1") GobDecode (@"time".dataÂ·3 []byte "esc:0x1") (? error)
-	func (@"time".tÂ·3 @"time".Time "esc:0x1") GobEncode () (? []byte, ? error)
-	func (@"time".tÂ·2 @"time".Time "esc:0x1") Hour () (? int)
-	func (@"time".tÂ·3 @"time".Time "esc:0x1") ISOWeek () (@"time".yearÂ·1 int, @"time".weekÂ·2 int)
-	func (@"time".tÂ·2 @"time".Time "esc:0x12") In (@"time".locÂ·3 *@"time".Location "esc:0x12") (? @"time".Time)
-	func (@"time".tÂ·2 @"time".Time "esc:0x1") IsZero () (? bool) { return @"time".tÂ·2.@"time".sec == 0x0 && @"time".tÂ·2.@"time".nsec == 0x0 }
-	func (@"time".tÂ·2 @"time".Time "esc:0x12") Local () (? @"time".Time) { @"time".tÂ·2.@"time".loc = @"time".Local; return @"time".tÂ·2 }
-	func (@"time".tÂ·2 @"time".Time "esc:0x12") Location () (? *@"time".Location) { var @"time".lÂ·3 *@"time".Location; ; @"time".lÂ·3 = @"time".tÂ·2.@"time".loc; if @"time".lÂ·3 == nil { @"time".lÂ·3 = @"time".UTC }; return @"time".lÂ·3 }
-	func (@"time".tÂ·3 @"time".Time "esc:0x1") MarshalBinary () (? []byte, ? error)
-	func (@"time".tÂ·3 @"time".Time "esc:0x9") MarshalJSON () (? []byte, ? error)
-	func (@"time".tÂ·3 @"time".Time "esc:0x9") MarshalText () (? []byte, ? error)
-	func (@"time".tÂ·2 @"time".Time "esc:0x1") Minute () (? int)
-	func (@"time".tÂ·2 @"time".Time "esc:0x1") Month () (? @"time".Month)
-	func (@"time".tÂ·2 @"time".Time "esc:0x1") Nanosecond () (? int) { return int(@"time".tÂ·2.@"time".nsec) }
-	func (@"time".tÂ·2 @"time".Time "esc:0x12") Round (@"time".dÂ·3 @"time".Duration) (? @"time".Time)
-	func (@"time".tÂ·2 @"time".Time "esc:0x1") Second () (? int)
-	func (@"time".tÂ·2 @"time".Time "esc:0x9") String () (? string)
-	func (@"time".tÂ·2 @"time".Time "esc:0x1") Sub (@"time".uÂ·3 @"time".Time "esc:0x1") (? @"time".Duration)
-	func (@"time".tÂ·2 @"time".Time "esc:0x12") Truncate (@"time".dÂ·3 @"time".Duration) (? @"time".Time)
-	func (@"time".tÂ·2 @"time".Time "esc:0x12") UTC () (? @"time".Time) { @"time".tÂ·2.@"time".loc = @"time".UTC; return @"time".tÂ·2 }
-	func (@"time".tÂ·2 @"time".Time "esc:0x1") Unix () (? int64) { return @"time".tÂ·2.@"time".sec + -0xe7791f700 }
-	func (@"time".tÂ·2 @"time".Time "esc:0x1") UnixNano () (? int64) { return (@"time".tÂ·2.@"time".sec + -0xe7791f700) * 0x3b9aca00 + int64(@"time".tÂ·2.@"time".nsec) }
-	func (@"time".tÂ·2 *@"time".Time "esc:0x1") UnmarshalBinary (@"time".dataÂ·3 []byte "esc:0x1") (? error)
-	func (@"time".tÂ·2 *@"time".Time "esc:0x1") UnmarshalJSON (@"time".dataÂ·3 []byte "esc:0x1") (@"time".errÂ·1 error)
-	func (@"time".tÂ·2 *@"time".Time "esc:0x1") UnmarshalText (@"time".dataÂ·3 []byte "esc:0x1") (@"time".errÂ·1 error)
-	func (@"time".tÂ·2 @"time".Time "esc:0x1") Weekday () (? @"time".Weekday)
-	func (@"time".tÂ·2 @"time".Time "esc:0x1") Year () (? int)
-	func (@"time".tÂ·2 @"time".Time "esc:0x1") YearDay () (? int)
-	func (@"time".tÂ·3 @"time".Time "esc:0x32") Zone () (@"time".nameÂ·1 string, @"time".offsetÂ·2 int)
-	func (@"time".tÂ·2 @"time".Time "esc:0x1") @"time".abs () (? uint64)
-	func (@"time".tÂ·5 @"time".Time "esc:0x1") @"time".date (@"time".fullÂ·6 bool) (@"time".yearÂ·1 int, @"time".monthÂ·2 @"time".Month, @"time".dayÂ·3 int, @"time".ydayÂ·4 int)
-	func (@"time".tÂ·4 @"time".Time "esc:0x32") @"time".locabs () (@"time".nameÂ·1 string, @"time".offsetÂ·2 int, @"time".absÂ·3 uint64)
-	type @"".Change struct { Source string; Path string; ModDate @"time".Time; IsDelete bool; IsMod bool; IsCreate bool; IsMove bool; Checksum string }
-	type @"".Transfer struct { Requestor string; Checksum string; Path string }
-	func @"".ListenForChanges ()
-	func @"".RequestFile (@"".changeÂ·1 *@"".Change "esc:0x9")
-	type @"sync".Mutex struct { @"sync".state int32; @"sync".sema uint32 }
-	func (@"sync".mÂ·1 *@"sync".Mutex) Lock ()
-	func (@"sync".mÂ·1 *@"sync".Mutex) Unlock ()
-	type @"sync".Once struct { @"sync".m @"sync".Mutex; @"sync".done uint32 }
-	func (@"sync".oÂ·1 *@"sync".Once) Do (@"sync".fÂ·2 func() "esc:0x1")
-	type @"io".ReadWriteCloser interface { Close() (? error); Read(@"io".p []byte) (@"io".n int, @"io".err error); Write(@"io".p []byte) (@"io".n int, @"io".err error) }
-	type @"io".Reader interface { Read(@"io".p []byte) (@"io".n int, @"io".err error) }
-	type @"io".Writer interface { Write(@"io".p []byte) (@"io".n int, @"io".err error) }
-	type @"github.com/streadway/amqp".message interface { @"github.com/streadway/amqp".id() (? uint16, ? uint16); @"github.com/streadway/amqp".read(? @"io".Reader) (? error); @"github.com/streadway/amqp".wait() (? bool); @"github.com/streadway/amqp".write(? @"io".Writer) (? error) }
-	type @"github.com/streadway/amqp".frame interface { @"github.com/streadway/amqp".channel() (? uint16); @"github.com/streadway/amqp".write(? @"io".Writer) (? error) }
-	type @"github.com/streadway/amqp".writer struct { @"github.com/streadway/amqp".w @"io".Writer }
-	func (@"github.com/streadway/amqp".meÂ·2 *@"github.com/streadway/amqp".writer "esc:0x3a") WriteFrame (@"github.com/streadway/amqp".frameÂ·3 @"github.com/streadway/amqp".frame) (@"github.com/streadway/amqp".errÂ·1 error)
-	type @"github.com/streadway/amqp".readDeadliner interface { SetReadDeadline(? @"time".Time) (? error) }
-	import big "math/big" // indirect
-	type @"math/big".Word uintptr
-	type @"math/big".divisor struct { @"math/big".bbb @"math/big".nat; @"math/big".nbits int; @"math/big".ndigits int }
-	import rand "math/rand" // indirect
-	type @"math/rand".Source interface { Int63() (? int64); Seed(@"math/rand".seed int64) }
-	type @"math/rand".Rand struct { @"math/rand".src @"math/rand".Source }
-	func (@"math/rand".rÂ·2 *@"math/rand".Rand "esc:0x9") ExpFloat64 () (? float64)
-	func (@"math/rand".rÂ·2 *@"math/rand".Rand "esc:0x9") Float32 () (? float32)
-	func (@"math/rand".rÂ·2 *@"math/rand".Rand "esc:0x9") Float64 () (? float64)
-	func (@"math/rand".rÂ·2 *@"math/rand".Rand "esc:0x9") Int () (? int)
-	func (@"math/rand".rÂ·2 *@"math/rand".Rand "esc:0x9") Int31 () (? int32)
-	func (@"math/rand".rÂ·2 *@"math/rand".Rand "esc:0x9") Int31n (@"math/rand".nÂ·3 int32) (? int32)
-	func (@"math/rand".rÂ·2 *@"math/rand".Rand "esc:0x9") Int63 () (? int64)
-	func (@"math/rand".rÂ·2 *@"math/rand".Rand "esc:0x9") Int63n (@"math/rand".nÂ·3 int64) (? int64)
-	func (@"math/rand".rÂ·2 *@"math/rand".Rand "esc:0x9") Intn (@"math/rand".nÂ·3 int) (? int)
-	func (@"math/rand".rÂ·2 *@"math/rand".Rand "esc:0x9") NormFloat64 () (? float64)
-	func (@"math/rand".rÂ·2 *@"math/rand".Rand "esc:0x9") Perm (@"math/rand".nÂ·3 int) (? []int)
-	func (@"math/rand".rÂ·1 *@"math/rand".Rand "esc:0x9") Seed (@"math/rand".seedÂ·2 int64)
-	func (@"math/rand".rÂ·2 *@"math/rand".Rand "esc:0x9") Uint32 () (? uint32)
-	type @"io".ByteScanner interface { ReadByte() (@"io".c byte, @"io".err error); UnreadByte() (? error) }
-	type @"math/big".nat []@"math/big".Word
-	func (@"math/big".zÂ·2 @"math/big".nat) @"math/big".add (@"math/big".xÂ·3 @"math/big".nat, @"math/big".yÂ·4 @"math/big".nat) (? @"math/big".nat)
-	func (@"math/big".zÂ·2 @"math/big".nat "esc:0x12") @"math/big".and (@"math/big".xÂ·3 @"math/big".nat "esc:0x1", @"math/big".yÂ·4 @"math/big".nat "esc:0x1") (? @"math/big".nat)
-	func (@"math/big".zÂ·2 @"math/big".nat "esc:0x12") @"math/big".andNot (@"math/big".xÂ·3 @"math/big".nat "esc:0x9", @"math/big".yÂ·4 @"math/big".nat "esc:0x1") (? @"math/big".nat)
-	func (@"math/big".xÂ·2 @"math/big".nat "esc:0x1") @"math/big".bit (@"math/big".iÂ·3 uint) (? uint) { var @"math/big".jÂ·4 uint; ; @"math/big".jÂ·4 = @"math/big".iÂ·3 / 0x40; if @"math/big".jÂ·4 >= uint(len(@"math/big".xÂ·2)) { return 0x0 }; return uint(@"math/big".xÂ·2[@"math/big".jÂ·4] >> (@"math/big".iÂ·3 % 0x40) & @"math/big".Word(0x1)) }
-	func (@"math/big".xÂ·2 @"math/big".nat "esc:0x1") @"math/big".bitLen () (? int)
-	func (@"math/big".zÂ·2 @"math/big".nat "esc:0x1") @"math/big".bytes (@"math/big".bufÂ·3 []byte "esc:0x1") (@"math/big".iÂ·1 int)
-	func (@"math/big".zÂ·1 @"math/big".nat "esc:0x1") @"math/big".clear ()
-	func (@"math/big".xÂ·2 @"math/big".nat "esc:0x1") @"math/big".cmp (@"math/big".yÂ·3 @"math/big".nat "esc:0x1") (@"math/big".rÂ·1 int)
-	func (@"math/big".qÂ·1 @"math/big".nat) @"math/big".convertWords (@"math/big".sÂ·2 []byte "esc:0x1", @"math/big".charsetÂ·3 string "esc:0x1", @"math/big".bÂ·4 @"math/big".Word, @"math/big".ndigitsÂ·5 int, @"math/big".bbÂ·6 @"math/big".Word, @"math/big".tableÂ·7 []@"math/big".divisor "esc:0x9")
-	func (@"math/big".xÂ·2 @"math/big".nat "esc:0x9") @"math/big".decimalString () (? string)
-	func (@"math/big".zÂ·3 @"math/big".nat) @"math/big".div (@"math/big".z2Â·4 @"math/big".nat, @"math/big".uÂ·5 @"math/big".nat, @"math/big".vÂ·6 @"math/big".nat) (@"math/big".qÂ·1 @"math/big".nat, @"math/big".rÂ·2 @"math/big".nat)
-	func (@"math/big".zÂ·3 @"math/big".nat "esc:0x12") @"math/big".divLarge (@"math/big".uÂ·4 @"math/big".nat, @"math/big".uInÂ·5 @"math/big".nat, @"math/big".vÂ·6 @"math/big".nat) (@"math/big".qÂ·1 @"math/big".nat, @"math/big".rÂ·2 @"math/big".nat)
-	func (@"math/big".zÂ·3 @"math/big".nat) @"math/big".divW (@"math/big".xÂ·4 @"math/big".nat, @"math/big".yÂ·5 @"math/big".Word) (@"math/big".qÂ·1 @"math/big".nat, @"math/big".rÂ·2 @"math/big".Word)
-	func (@"math/big".zÂ·2 @"math/big".nat) @"math/big".expNN (@"math/big".xÂ·3 @"math/big".nat, @"math/big".yÂ·4 @"math/big".nat "esc:0x1", @"math/big".mÂ·5 @"math/big".nat) (? @"math/big".nat)
-	func (@"math/big".zÂ·2 @"math/big".nat) @"math/big".expNNMontgomery (@"math/big".xÂ·3 @"math/big".nat, @"math/big".yÂ·4 @"math/big".nat "esc:0x1", @"math/big".mÂ·5 @"math/big".nat) (? @"math/big".nat)
-	func (@"math/big".zÂ·2 @"math/big".nat) @"math/big".expNNWindowed (@"math/big".xÂ·3 @"math/big".nat, @"math/big".yÂ·4 @"math/big".nat "esc:0x1", @"math/big".mÂ·5 @"math/big".nat) (? @"math/big".nat)
-	func (@"math/big".zÂ·2 @"math/big".nat) @"math/big".expWW (@"math/big".xÂ·3 @"math/big".Word, @"math/big".yÂ·4 @"math/big".Word) (? @"math/big".nat)
-	func (@"math/big".xÂ·2 @"math/big".nat "esc:0x9") @"math/big".hexString () (? string)
-	func (@"math/big".zÂ·2 @"math/big".nat "esc:0x12") @"math/big".make (@"math/big".nÂ·3 int) (? @"math/big".nat)
-	func (@"math/big".xÂ·2 @"math/big".nat) @"math/big".modW (@"math/big".dÂ·3 @"math/big".Word) (@"math/big".rÂ·1 @"math/big".Word)
-	func (@"math/big".zÂ·2 @"math/big".nat) @"math/big".montgomery (@"math/big".xÂ·3 @"math/big".nat, @"math/big".yÂ·4 @"math/big".nat "esc:0x1", @"math/big".mÂ·5 @"math/big".nat, @"math/big".kÂ·6 @"math/big".Word, @"math/big".nÂ·7 int) (? @"math/big".nat)
-	func (@"math/big".zÂ·2 @"math/big".nat) @"math/big".mul (@"math/big".xÂ·3 @"math/big".nat, @"math/big".yÂ·4 @"math/big".nat) (? @"math/big".nat)
-	func (@"math/big".zÂ·2 @"math/big".nat) @"math/big".mulAddWW (@"math/big".xÂ·3 @"math/big".nat, @"math/big".yÂ·4 @"math/big".Word, @"math/big".rÂ·5 @"math/big".Word) (? @"math/big".nat)
-	func (@"math/big".zÂ·2 @"math/big".nat) @"math/big".mulRange (@"math/big".aÂ·3 uint64, @"math/big".bÂ·4 uint64) (? @"math/big".nat)
-	func (@"math/big".zÂ·2 @"math/big".nat "esc:0x12") @"math/big".norm () (? @"math/big".nat)
-	func (@"math/big".zÂ·2 @"math/big".nat "esc:0x12") @"math/big".or (@"math/big".xÂ·3 @"math/big".nat "esc:0x9", @"math/big".yÂ·4 @"math/big".nat "esc:0x9") (? @"math/big".nat)
-	func (@"math/big".nÂ·2 @"math/big".nat) @"math/big".probablyPrime (@"math/big".repsÂ·3 int) (? bool)
-	func (@"math/big".zÂ·2 @"math/big".nat "esc:0x12") @"math/big".random (@"math/big".randÂ·3 *@"math/rand".Rand "esc:0x9", @"math/big".limitÂ·4 @"math/big".nat "esc:0x1", @"math/big".nÂ·5 int) (? @"math/big".nat)
-	func (@"math/big".zÂ·5 @"math/big".nat) @"math/big".scan (@"math/big".rÂ·6 @"io".ByteScanner, @"math/big".baseÂ·7 int, @"math/big".fracOkÂ·8 bool) (@"math/big".resÂ·1 @"math/big".nat, @"math/big".bÂ·2 int, @"math/big".countÂ·3 int, @"math/big".errÂ·4 error)
-	func (@"math/big".zÂ·2 @"math/big".nat "esc:0x12") @"math/big".set (@"math/big".xÂ·3 @"math/big".nat "esc:0x9") (? @"math/big".nat)
-	func (@"math/big".zÂ·2 @"math/big".nat "esc:0x12") @"math/big".setBit (@"math/big".xÂ·3 @"math/big".nat "esc:0x9", @"math/big".iÂ·4 uint, @"math/big".bÂ·5 uint) (? @"math/big".nat)
-	func (@"math/big".zÂ·2 @"math/big".nat "esc:0x12") @"math/big".setBytes (@"math/big".bufÂ·3 []byte "esc:0x1") (? @"math/big".nat)
-	func (@"math/big".zÂ·2 @"math/big".nat "esc:0x12") @"math/big".setUint64 (@"math/big".xÂ·3 uint64) (? @"math/big".nat)
-	func (@"math/big".zÂ·2 @"math/big".nat "esc:0x12") @"math/big".setWord (@"math/big".xÂ·3 @"math/big".Word) (? @"math/big".nat)
-	func (@"math/big".zÂ·2 @"math/big".nat) @"math/big".shl (@"math/big".xÂ·3 @"math/big".nat, @"math/big".sÂ·4 uint) (? @"math/big".nat)
-	func (@"math/big".zÂ·2 @"math/big".nat) @"math/big".shr (@"math/big".xÂ·3 @"math/big".nat, @"math/big".sÂ·4 uint) (? @"math/big".nat)
-	func (@"math/big".xÂ·2 @"math/big".nat "esc:0x1") @"math/big".sticky (@"math/big".iÂ·3 uint) (? uint)
-	func (@"math/big".xÂ·2 @"math/big".nat "esc:0x9") @"math/big".string (@"math/big".charsetÂ·3 string "esc:0x1") (? string)
-	func (@"math/big".zÂ·2 @"math/big".nat) @"math/big".sub (@"math/big".xÂ·3 @"math/big".nat, @"math/big".yÂ·4 @"math/big".nat) (? @"math/big".nat)
-	func (@"math/big".xÂ·2 @"math/big".nat "esc:0x1") @"math/big".trailingZeroBits () (? uint)
-	func (@"math/big".zÂ·2 @"math/big".nat "esc:0x12") @"math/big".xor (@"math/big".xÂ·3 @"math/big".nat "esc:0x9", @"math/big".yÂ·4 @"math/big".nat "esc:0x9") (? @"math/big".nat)
-	type @"fmt".State interface { Flag(@"fmt".c int) (? bool); Precision() (@"fmt".prec int, @"fmt".ok bool); Width() (@"fmt".wid int, @"fmt".ok bool); Write(@"fmt".b []byte) (@"fmt".ret int, @"fmt".err error) }
-	type @"fmt".ScanState interface { Read(@"fmt".buf []byte) (@"fmt".n int, @"fmt".err error); ReadRune() (@"fmt".r rune, @"fmt".size int, @"fmt".err error); SkipSpace(); Token(@"fmt".skipSpace bool, @"fmt".f func(? rune) (? bool)) (@"fmt".token []byte, @"fmt".err error); UnreadRune() (? error); Width() (@"fmt".wid int, @"fmt".ok bool) }
-	type @"math/big".Int struct { @"math/big".neg bool; @"math/big".abs @"math/big".nat }
-	func (@"math/big".zÂ·2 *@"math/big".Int "esc:0x1a") Abs (@"math/big".xÂ·3 *@"math/big".Int "esc:0x9") (? *@"math/big".Int)
-	func (@"math/big".zÂ·2 *@"math/big".Int "esc:0x1a") Add (@"math/big".xÂ·3 *@"math/big".Int "esc:0x9", @"math/big".yÂ·4 *@"math/big".Int "esc:0x9") (? *@"math/big".Int)
-	func (@"math/big".zÂ·2 *@"math/big".Int "esc:0x1a") And (@"math/big".xÂ·3 *@"math/big".Int "esc:0x9", @"math/big".yÂ·4 *@"math/big".Int "esc:0x9") (? *@"math/big".Int)
-	func (@"math/big".zÂ·2 *@"math/big".Int "esc:0x1a") AndNot (@"math/big".xÂ·3 *@"math/big".Int "esc:0x9", @"math/big".yÂ·4 *@"math/big".Int "esc:0x9") (? *@"math/big".Int)
-	func (@"math/big".zÂ·2 *@"math/big".Int "esc:0x1a") Binomial (@"math/big".nÂ·3 int64, @"math/big".kÂ·4 int64) (? *@"math/big".Int)
-	func (@"math/big".xÂ·2 *@"math/big".Int "esc:0x9") Bit (@"math/big".iÂ·3 int) (? uint)
-	func (@"math/big".xÂ·2 *@"math/big".Int "esc:0x1") BitLen () (? int)
-	func (@"math/big".xÂ·2 *@"math/big".Int "esc:0x22") Bits () (? []@"math/big".Word) { return @"math/big".xÂ·2.@"math/big".abs }
-	func (@"math/big".xÂ·2 *@"math/big".Int "esc:0x1") Bytes () (? []byte)
-	func (@"math/big".xÂ·2 *@"math/big".Int "esc:0x1") Cmp (@"math/big".yÂ·3 *@"math/big".Int "esc:0x1") (@"math/big".rÂ·1 int)
-	func (@"math/big".zÂ·2 *@"math/big".Int "esc:0x1a") Div (@"math/big".xÂ·3 *@"math/big".Int "esc:0x9", @"math/big".yÂ·4 *@"math/big".Int "esc:0x9") (? *@"math/big".Int)
-	func (@"math/big".zÂ·3 *@"math/big".Int "esc:0x1a") DivMod (@"math/big".xÂ·4 *@"math/big".Int "esc:0x9", @"math/big".yÂ·5 *@"math/big".Int "esc:0x9", @"math/big".mÂ·6 *@"math/big".Int "esc:0x8a") (? *@"math/big".Int, ? *@"math/big".Int)
-	func (@"math/big".zÂ·2 *@"math/big".Int "esc:0x1a") Exp (@"math/big".xÂ·3 *@"math/big".Int "esc:0x9", @"math/big".yÂ·4 *@"math/big".Int "esc:0x1", @"math/big".mÂ·5 *@"math/big".Int "esc:0x9") (? *@"math/big".Int)
-	func (@"math/big".xÂ·1 *@"math/big".Int "esc:0x9") Format (@"math/big".sÂ·2 @"fmt".State, @"math/big".chÂ·3 rune)
-	func (@"math/big".zÂ·2 *@"math/big".Int "esc:0x1a") GCD (@"math/big".xÂ·3 *@"math/big".Int "esc:0x9", @"math/big".yÂ·4 *@"math/big".Int "esc:0x9", @"math/big".aÂ·5 *@"math/big".Int "esc:0x9", @"math/big".bÂ·6 *@"math/big".Int "esc:0x9") (? *@"math/big".Int)
-	func (@"math/big".zÂ·2 *@"math/big".Int "esc:0x9") GobDecode (@"math/big".bufÂ·3 []byte "esc:0x1") (? error)
-	func (@"math/big".xÂ·3 *@"math/big".Int "esc:0x1") GobEncode () (? []byte, ? error)
-	func (@"math/big".xÂ·2 *@"math/big".Int "esc:0x1") Int64 () (? int64) { var @"math/big".vÂ·3 int64; ; @"math/big".vÂ·3 = int64(@"math/big".low64(@"math/big".xÂ·2.@"math/big".abs)); if @"math/big".xÂ·2.@"math/big".neg { @"math/big".vÂ·3 = -@"math/big".vÂ·3 }; return @"math/big".vÂ·3 }
-	func (@"math/big".zÂ·2 *@"math/big".Int "esc:0x1a") Lsh (@"math/big".xÂ·3 *@"math/big".Int "esc:0x9", @"math/big".nÂ·4 uint) (? *@"math/big".Int)
-	func (@"math/big".zÂ·3 *@"math/big".Int "esc:0x9") MarshalJSON () (? []byte, ? error)
-	func (@"math/big".zÂ·3 *@"math/big".Int "esc:0x9") MarshalText () (@"math/big".textÂ·1 []byte, @"math/big".errÂ·2 error)
-	func (@"math/big".zÂ·2 *@"math/big".Int "esc:0x1a") Mod (@"math/big".xÂ·3 *@"math/big".Int "esc:0x9", @"math/big".yÂ·4 *@"math/big".Int "esc:0x9") (? *@"math/big".Int)
-	func (@"math/big".zÂ·2 *@"math/big".Int "esc:0x1a") ModInverse (@"math/big".gÂ·3 *@"math/big".Int "esc:0x9", @"math/big".nÂ·4 *@"math/big".Int "esc:0x9") (? *@"math/big".Int)
-	func (@"math/big".zÂ·2 *@"math/big".Int "esc:0x1a") ModSqrt (@"math/big".xÂ·3 *@"math/big".Int "esc:0x9", @"math/big".pÂ·4 *@"math/big".Int) (? *@"math/big".Int)
-	func (@"math/big".zÂ·2 *@"math/big".Int "esc:0x1a") Mul (@"math/big".xÂ·3 *@"math/big".Int "esc:0x9", @"math/big".yÂ·4 *@"math/big".Int "esc:0x9") (? *@"math/big".Int)
-	func (@"math/big".zÂ·2 *@"math/big".Int "esc:0x1a") MulRange (@"math/big".aÂ·3 int64, @"math/big".bÂ·4 int64) (? *@"math/big".Int)
-	func (@"math/big".zÂ·2 *@"math/big".Int "esc:0x1a") Neg (@"math/big".xÂ·3 *@"math/big".Int "esc:0x9") (? *@"math/big".Int)
-	func (@"math/big".zÂ·2 *@"math/big".Int "esc:0x1a") Not (@"math/big".xÂ·3 *@"math/big".Int "esc:0x9") (? *@"math/big".Int)
-	func (@"math/big".zÂ·2 *@"math/big".Int "esc:0x1a") Or (@"math/big".xÂ·3 *@"math/big".Int "esc:0x9", @"math/big".yÂ·4 *@"math/big".Int "esc:0x9") (? *@"math/big".Int)
-	func (@"math/big".xÂ·2 *@"math/big".Int "esc:0x9") ProbablyPrime (@"math/big".nÂ·3 int) (? bool)
-	func (@"math/big".zÂ·2 *@"math/big".Int "esc:0x1a") Quo (@"math/big".xÂ·3 *@"math/big".Int "esc:0x9", @"math/big".yÂ·4 *@"math/big".Int "esc:0x9") (? *@"math/big".Int)
-	func (@"math/big".zÂ·3 *@"math/big".Int "esc:0x1a") QuoRem (@"math/big".xÂ·4 *@"math/big".Int "esc:0x9", @"math/big".yÂ·5 *@"math/big".Int "esc:0x9", @"math/big".rÂ·6 *@"math/big".Int "esc:0x8a") (? *@"math/big".Int, ? *@"math/big".Int)
-	func (@"math/big".zÂ·2 *@"math/big".Int "esc:0x1a") Rand (@"math/big".rndÂ·3 *@"math/rand".Rand "esc:0x9", @"math/big".nÂ·4 *@"math/big".Int "esc:0x1") (? *@"math/big".Int)
-	func (@"math/big".zÂ·2 *@"math/big".Int "esc:0x1a") Rem (@"math/big".xÂ·3 *@"math/big".Int "esc:0x9", @"math/big".yÂ·4 *@"math/big".Int "esc:0x9") (? *@"math/big".Int)
-	func (@"math/big".zÂ·2 *@"math/big".Int "esc:0x1a") Rsh (@"math/big".xÂ·3 *@"math/big".Int "esc:0x9", @"math/big".nÂ·4 uint) (? *@"math/big".Int)
-	func (@"math/big".zÂ·2 *@"math/big".Int "esc:0x9") Scan (@"math/big".sÂ·3 @"fmt".ScanState, @"math/big".chÂ·4 rune) (? error)
-	func (@"math/big".zÂ·2 *@"math/big".Int "esc:0x1a") Set (@"math/big".xÂ·3 *@"math/big".Int "esc:0x9") (? *@"math/big".Int)
-	func (@"math/big".zÂ·2 *@"math/big".Int "esc:0x1a") SetBit (@"math/big".xÂ·3 *@"math/big".Int "esc:0x9", @"math/big".iÂ·4 int, @"math/big".bÂ·5 uint) (? *@"math/big".Int)
-	func (@"math/big".zÂ·2 *@"math/big".Int "esc:0x12") SetBits (@"math/big".absÂ·3 []@"math/big".Word) (? *@"math/big".Int)
-	func (@"math/big".zÂ·2 *@"math/big".Int "esc:0x1a") SetBytes (@"math/big".bufÂ·3 []byte "esc:0x1") (? *@"math/big".Int)
-	func (@"math/big".zÂ·2 *@"math/big".Int "esc:0x1a") SetInt64 (@"math/big".xÂ·3 int64) (? *@"math/big".Int)
-	func (@"math/big".zÂ·3 *@"math/big".Int "esc:0x1a") SetString (@"math/big".sÂ·4 string, @"math/big".baseÂ·5 int) (? *@"math/big".Int, ? bool)
-	func (@"math/big".zÂ·2 *@"math/big".Int "esc:0x1a") SetUint64 (@"math/big".xÂ·3 uint64) (? *@"math/big".Int)
-	func (@"math/big".xÂ·2 *@"math/big".Int "esc:0x1") Sign () (? int) { if len(@"math/big".xÂ·2.@"math/big".abs) == 0x0 { return 0x0 }; if @"math/big".xÂ·2.@"math/big".neg { return -0x1 }; return 0x1 }
-	func (@"math/big".xÂ·2 *@"math/big".Int "esc:0x9") String () (? string)
-	func (@"math/big".zÂ·2 *@"math/big".Int "esc:0x1a") Sub (@"math/big".xÂ·3 *@"math/big".Int "esc:0x9", @"math/big".yÂ·4 *@"math/big".Int "esc:0x9") (? *@"math/big".Int)
-	func (@"math/big".xÂ·2 *@"math/big".Int "esc:0x1") Uint64 () (? uint64) { return @"math/big".low64(@"math/big".xÂ·2.@"math/big".abs) }
-	func (@"math/big".zÂ·2 *@"math/big".Int "esc:0x9") UnmarshalJSON (@"math/big".textÂ·3 []byte) (? error)
-	func (@"math/big".zÂ·2 *@"math/big".Int "esc:0x9") UnmarshalText (@"math/big".textÂ·3 []byte) (? error)
-	func (@"math/big".zÂ·2 *@"math/big".Int "esc:0x1a") Xor (@"math/big".xÂ·3 *@"math/big".Int "esc:0x9", @"math/big".yÂ·4 *@"math/big".Int "esc:0x9") (? *@"math/big".Int)
-	func (@"math/big".zÂ·2 *@"math/big".Int "esc:0x1a") @"math/big".binaryGCD (@"math/big".aÂ·3 *@"math/big".Int "esc:0x9", @"math/big".bÂ·4 *@"math/big".Int "esc:0x9") (? *@"math/big".Int)
-	func (@"math/big".zÂ·4 *@"math/big".Int "esc:0x1a") @"math/big".scan (@"math/big".rÂ·5 @"io".ByteScanner, @"math/big".baseÂ·6 int) (? *@"math/big".Int, ? int, ? error)
-	type @"github.com/streadway/amqp".allocator struct { @"github.com/streadway/amqp".pool *@"math/big".Int; @"github.com/streadway/amqp".last int; @"github.com/streadway/amqp".low int; @"github.com/streadway/amqp".high int }
-	func (@"github.com/streadway/amqp".aÂ·2 @"github.com/streadway/amqp".allocator) String () (? string)
-	func (@"github.com/streadway/amqp".aÂ·3 *@"github.com/streadway/amqp".allocator "esc:0x9") @"github.com/streadway/amqp".next () (? int, ? bool)
-	func (@"github.com/streadway/amqp".aÂ·1 *@"github.com/streadway/amqp".allocator "esc:0x9") @"github.com/streadway/amqp".release (@"github.com/streadway/amqp".nÂ·2 int)
-	func (@"github.com/streadway/amqp".aÂ·2 *@"github.com/streadway/amqp".allocator "esc:0x9") @"github.com/streadway/amqp".reserve (@"github.com/streadway/amqp".nÂ·3 int) (? bool)
-	func (@"github.com/streadway/amqp".aÂ·2 *@"github.com/streadway/amqp".allocator "esc:0x9") @"github.com/streadway/amqp".reserved (@"github.com/streadway/amqp".nÂ·3 int) (? bool)
-	type @"github.com/streadway/amqp".Error struct { Code int; Reason string; Server bool; Recover bool }
-	func (@"github.com/streadway/amqp".meÂ·2 @"github.com/streadway/amqp".Error) Error () (? string)
-	type @"github.com/streadway/amqp".Blocking struct { Active bool; Reason string }
-	type @"github.com/streadway/amqp".Authentication interface { Mechanism() (? string); Response() (? string) }
-	import tls "crypto/tls" // indirect
-	import crypto "crypto" // indirect
-	type @"crypto".PrivateKey interface {}
-	import x509 "crypto/x509" // indirect
-	type @"crypto/x509".SignatureAlgorithm int
-	type @"crypto/x509".PublicKeyAlgorithm int
-	import pkix "crypto/x509/pkix" // indirect
-	import asn1 "encoding/asn1" // indirect
-	type @"encoding/asn1".ObjectIdentifier []int
-	func (@"encoding/asn1".oiÂ·2 @"encoding/asn1".ObjectIdentifier "esc:0x1") Equal (@"encoding/asn1".otherÂ·3 @"encoding/asn1".ObjectIdentifier "esc:0x1") (? bool)
-	func (@"encoding/asn1".oiÂ·2 @"encoding/asn1".ObjectIdentifier "esc:0x1") String () (? string)
-	type @"crypto/x509/pkix".AttributeTypeAndValue struct { Type @"encoding/asn1".ObjectIdentifier; Value interface {} }
-	type @"crypto/x509/pkix".RelativeDistinguishedNameSET []@"crypto/x509/pkix".AttributeTypeAndValue
-	type @"crypto/x509/pkix".RDNSequence []@"crypto/x509/pkix".RelativeDistinguishedNameSET
-	type @"crypto/x509/pkix".Name struct { Country []string; Organization []string; OrganizationalUnit []string; Locality []string; Province []string; StreetAddress []string; PostalCode []string; SerialNumber string; CommonName string; Names []@"crypto/x509/pkix".AttributeTypeAndValue; ExtraNames []@"crypto/x509/pkix".AttributeTypeAndValue }
-	func (@"crypto/x509/pkix".nÂ·1 *@"crypto/x509/pkix".Name "esc:0x9") FillFromRDNSequence (@"crypto/x509/pkix".rdnsÂ·2 *@"crypto/x509/pkix".RDNSequence "esc:0x9")
-	func (@"crypto/x509/pkix".nÂ·2 @"crypto/x509/pkix".Name) ToRDNSequence () (@"crypto/x509/pkix".retÂ·1 @"crypto/x509/pkix".RDNSequence)
-	func (@"crypto/x509/pkix".nÂ·2 @"crypto/x509/pkix".Name "esc:0x1") @"crypto/x509/pkix".appendRDNs (@"crypto/x509/pkix".inÂ·3 @"crypto/x509/pkix".RDNSequence "esc:0x1a", @"crypto/x509/pkix".valuesÂ·4 []string "esc:0x9", @"crypto/x509/pkix".oidÂ·5 @"encoding/asn1".ObjectIdentifier) (? @"crypto/x509/pkix".RDNSequence)
-	type @"crypto/x509".KeyUsage int
-	type @"crypto/x509/pkix".Extension struct { Id @"encoding/asn1".ObjectIdentifier; Critical bool "asn1:\"optional\""; Value []byte }
-	type @"crypto/x509".ExtKeyUsage int
-	import net "net" // indirect
-	type @"net".IPMask []byte
-	func (@"net".mÂ·3 @"net".IPMask "esc:0x1") Size () (@"net".onesÂ·1 int, @"net".bitsÂ·2 int)
-	func (@"net".mÂ·2 @"net".IPMask "esc:0x1") String () (? string)
-	type @"net".IP []byte
-	func (@"net".ipÂ·2 @"net".IP "esc:0x1") DefaultMask () (? @"net".IPMask)
-	func (@"net".ipÂ·2 @"net".IP "esc:0x1") Equal (@"net".xÂ·3 @"net".IP "esc:0x1") (? bool)
-	func (@"net".ipÂ·2 @"net".IP "esc:0x1") IsGlobalUnicast () (? bool)
-	func (@"net".ipÂ·2 @"net".IP "esc:0x1") IsInterfaceLocalMulticast () (? bool) { return len(@"net".ipÂ·2) == 0x10 && @"net".ipÂ·2[0x0] == byte(0xff) && @"net".ipÂ·2[0x1] & byte(0xf) == byte(0x1) }
-	func (@"net".ipÂ·2 @"net".IP "esc:0x1") IsLinkLocalMulticast () (? bool)
-	func (@"net".ipÂ·2 @"net".IP "esc:0x1") IsLinkLocalUnicast () (? bool)
-	func (@"net".ipÂ·2 @"net".IP "esc:0x1") IsLoopback () (? bool)
-	func (@"net".ipÂ·2 @"net".IP "esc:0x1") IsMulticast () (? bool)
-	func (@"net".ipÂ·2 @"net".IP "esc:0x1") IsUnspecified () (? bool)
-	func (@"net".ipÂ·3 @"net".IP "esc:0x1") MarshalText () (? []byte, ? error)
-	func (@"net".ipÂ·2 @"net".IP "esc:0x1") Mask (@"net".maskÂ·3 @"net".IPMask "esc:0x1") (? @"net".IP)
-	func (@"net".ipÂ·2 @"net".IP "esc:0x1") String () (? string)
-	func (@"net".ipÂ·2 @"net".IP "esc:0x12") To16 () (? @"net".IP) { if len(@"net".ipÂ·2) == 0x4 { return @"net".IPv4(@"net".ipÂ·2[0x0], @"net".ipÂ·2[0x1], @"net".ipÂ·2[0x2], @"net".ipÂ·2[0x3]) }; if len(@"net".ipÂ·2) == 0x10 { return @"net".ipÂ·2 }; return nil }
-	func (@"net".ipÂ·2 @"net".IP "esc:0x12") To4 () (? @"net".IP)
-	func (@"net".ipÂ·2 *@"net".IP "esc:0x1") UnmarshalText (@"net".textÂ·3 []byte "esc:0x1") (? error)
-	type @"encoding/asn1".RawContent []byte
-	type @"encoding/asn1".RawValue struct { Class int; Tag int; IsCompound bool; Bytes []byte; FullBytes []byte }
-	type @"crypto/x509/pkix".AlgorithmIdentifier struct { Algorithm @"encoding/asn1".ObjectIdentifier; Parameters @"encoding/asn1".RawValue "asn1:\"optional\"" }
-	type @"crypto/x509/pkix".RevokedCertificate struct { SerialNumber *@"math/big".Int; RevocationTime @"time".Time; Extensions []@"crypto/x509/pkix".Extension "asn1:\"optional\"" }
-	type @"crypto/x509/pkix".TBSCertificateList struct { Raw @"encoding/asn1".RawContent; Version int "asn1:\"optional,default:1\""; Signature @"crypto/x509/pkix".AlgorithmIdentifier; Issuer @"crypto/x509/pkix".RDNSequence; ThisUpdate @"time".Time; NextUpdate @"time".Time "asn1:\"optional\""; RevokedCertificates []@"crypto/x509/pkix".RevokedCertificate "asn1:\"optional\""; Extensions []@"crypto/x509/pkix".Extension "asn1:\"tag:0,optional,explicit\"" }
-	type @"encoding/asn1".BitString struct { Bytes []byte; BitLength int }
-	func (@"encoding/asn1".bÂ·2 @"encoding/asn1".BitString "esc:0x1") At (@"encoding/asn1".iÂ·3 int) (? int) { if @"encoding/asn1".iÂ·3 < 0x0 || @"encoding/asn1".iÂ·3 >= @"encoding/asn1".bÂ·2.BitLength { return 0x0 }; var @"encoding/asn1".xÂ·4 int; ; @"encoding/asn1".xÂ·4 = @"encoding/asn1".iÂ·3 / 0x8; var @"encoding/asn1".yÂ·5 uint; ; @"encoding/asn1".yÂ·5 = 0x7 - uint(@"encoding/asn1".iÂ·3 % 0x8); return int(@"encoding/asn1".bÂ·2.Bytes[@"encoding/asn1".xÂ·4] >> @"encoding/asn1".yÂ·5) & 0x1 }
-	func (@"encoding/asn1".bÂ·2 @"encoding/asn1".BitString "esc:0x12") RightAlign () (? []byte)
-	type @"crypto/x509/pkix".CertificateList struct { TBSCertList @"crypto/x509/pkix".TBSCertificateList; SignatureAlgorithm @"crypto/x509/pkix".AlgorithmIdentifier; SignatureValue @"encoding/asn1".BitString }
-	func (@"crypto/x509/pkix".certListÂ·2 *@"crypto/x509/pkix".CertificateList "esc:0x1") HasExpired (@"crypto/x509/pkix".nowÂ·3 @"time".Time "esc:0x1") (? bool) { return @"crypto/x509/pkix".nowÂ·3.After(@"crypto/x509/pkix".certListÂ·2.TBSCertList.NextUpdate) }
-	type @"crypto/x509".CertPool struct { @"crypto/x509".bySubjectKeyId map[string][]int; @"crypto/x509".byName map[string][]int; @"crypto/x509".certs []*@"crypto/x509".Certificate }
-	func (@"crypto/x509".sÂ·1 *@"crypto/x509".CertPool "esc:0x9") AddCert (@"crypto/x509".certÂ·2 *@"crypto/x509".Certificate)
-	func (@"crypto/x509".sÂ·2 *@"crypto/x509".CertPool "esc:0x9") AppendCertsFromPEM (@"crypto/x509".pemCertsÂ·3 []byte) (@"crypto/x509".okÂ·1 bool)
-	func (@"crypto/x509".sÂ·2 *@"crypto/x509".CertPool "esc:0x9") Subjects () (@"crypto/x509".resÂ·1 [][]byte)
-	func (@"crypto/x509".sÂ·4 *@"crypto/x509".CertPool "esc:0x18a") @"crypto/x509".findVerifiedParents (@"crypto/x509".certÂ·5 *@"crypto/x509".Certificate "esc:0x9") (@"crypto/x509".parentsÂ·1 []int, @"crypto/x509".errCertÂ·2 *@"crypto/x509".Certificate, @"crypto/x509".errÂ·3 error)
-	type @"crypto/x509".VerifyOptions struct { DNSName string; Intermediates *@"crypto/x509".CertPool; Roots *@"crypto/x509".CertPool; CurrentTime @"time".Time; KeyUsages []@"crypto/x509".ExtKeyUsage }
-	type @"crypto/x509".Certificate struct { Raw []byte; RawTBSCertificate []byte; RawSubjectPublicKeyInfo []byte; RawSubject []byte; RawIssuer []byte; Signature []byte; SignatureAlgorithm @"crypto/x509".SignatureAlgorithm; PublicKeyAlgorithm @"crypto/x509".PublicKeyAlgorithm; PublicKey interface {}; Version int; SerialNumber *@"math/big".Int; Issuer @"crypto/x509/pkix".Name; Subject @"crypto/x509/pkix".Name; NotBefore @"time".Time; NotAfter @"time".Time; KeyUsage @"crypto/x509".KeyUsage; Extensions []@"crypto/x509/pkix".Extension; ExtraExtensions []@"crypto/x509/pkix".Extension; UnhandledCriticalExtensions []@"encoding/asn1".ObjectIdentifier; ExtKeyUsage []@"crypto/x509".ExtKeyUsage; UnknownExtKeyUsage []@"encoding/asn1".ObjectIdentifier; BasicConstraintsValid bool; IsCA bool; MaxPathLen int; MaxPathLenZero bool; SubjectKeyId []byte; AuthorityKeyId []byte; OCSPServer []string; IssuingCertificateURL []string; DNSNames []string; EmailAddresses []string; IPAddresses []@"net".IP; PermittedDNSDomainsCritical bool; PermittedDNSDomains []string; CRLDistributionPoints []string; PolicyIdentifiers []@"encoding/asn1".ObjectIdentifier }
-	func (@"crypto/x509".cÂ·2 *@"crypto/x509".Certificate "esc:0x9") CheckCRLSignature (@"crypto/x509".crlÂ·3 *@"crypto/x509/pkix".CertificateList "esc:0x9") (@"crypto/x509".errÂ·1 error)
-	func (@"crypto/x509".cÂ·2 *@"crypto/x509".Certificate "esc:0x9") CheckSignature (@"crypto/x509".algoÂ·3 @"crypto/x509".SignatureAlgorithm, @"crypto/x509".signedÂ·4 []byte, @"crypto/x509".signatureÂ·5 []byte) (@"crypto/x509".errÂ·1 error)
-	func (@"crypto/x509".cÂ·2 *@"crypto/x509".Certificate "esc:0x9") CheckSignatureFrom (@"crypto/x509".parentÂ·3 *@"crypto/x509".Certificate "esc:0x9") (@"crypto/x509".errÂ·1 error)
-	func (@"crypto/x509".cÂ·3 *@"crypto/x509".Certificate "esc:0x9") CreateCRL (@"crypto/x509".randÂ·4 @"io".Reader, @"crypto/x509".privÂ·5 interface {}, @"crypto/x509".revokedCertsÂ·6 []@"crypto/x509/pkix".RevokedCertificate, @"crypto/x509".nowÂ·7 @"time".Time, @"crypto/x509".expiryÂ·8 @"time".Time) (@"crypto/x509".crlBytesÂ·1 []byte, @"crypto/x509".errÂ·2 error)
-	func (@"crypto/x509".cÂ·2 *@"crypto/x509".Certificate "esc:0x1") Equal (@"crypto/x509".otherÂ·3 *@"crypto/x509".Certificate "esc:0x1") (? bool)
-	func (@"crypto/x509".cÂ·3 *@"crypto/x509".Certificate) Verify (@"crypto/x509".optsÂ·4 @"crypto/x509".VerifyOptions) (@"crypto/x509".chainsÂ·1 [][]*@"crypto/x509".Certificate, @"crypto/x509".errÂ·2 error)
-	func (@"crypto/x509".cÂ·2 *@"crypto/x509".Certificate "esc:0x1a") VerifyHostname (@"crypto/x509".hÂ·3 string) (? error)
-	func (@"crypto/x509".cÂ·3 *@"crypto/x509".Certificate) @"crypto/x509".buildChains (@"crypto/x509".cacheÂ·4 map[int][][]*@"crypto/x509".Certificate "esc:0x1", @"crypto/x509".currentChainÂ·5 []*@"crypto/x509".Certificate "esc:0x9", @"crypto/x509".optsÂ·6 *@"crypto/x509".VerifyOptions "esc:0x20a") (@"crypto/x509".chainsÂ·1 [][]*@"crypto/x509".Certificate, @"crypto/x509".errÂ·2 error)
-	func (@"crypto/x509".cÂ·2 *@"crypto/x509".Certificate "esc:0x12") @"crypto/x509".isValid (@"crypto/x509".certTypeÂ·3 int, @"crypto/x509".currentChainÂ·4 []*@"crypto/x509".Certificate "esc:0x1", @"crypto/x509".optsÂ·5 *@"crypto/x509".VerifyOptions "esc:0x1") (? error)
-	func (@"crypto/x509".cÂ·3 *@"crypto/x509".Certificate "esc:0x1") @"crypto/x509".systemVerify (@"crypto/x509".optsÂ·4 *@"crypto/x509".VerifyOptions "esc:0x1") (@"crypto/x509".chainsÂ·1 [][]*@"crypto/x509".Certificate, @"crypto/x509".errÂ·2 error) { return nil, nil }
-	type @"crypto/tls".Certificate struct { Certificate [][]byte; PrivateKey @"crypto".PrivateKey; OCSPStaple []byte; SignedCertificateTimestamps [][]byte; Leaf *@"crypto/x509".Certificate }
-	type @"crypto/tls".CurveID uint16
-	type @"crypto/tls".ClientHelloInfo struct { CipherSuites []uint16; ServerName string; SupportedCurves []@"crypto/tls".CurveID; SupportedPoints []uint8 }
-	type @"crypto/tls".ClientAuthType int
-	type @"crypto/tls".ClientSessionState struct { @"crypto/tls".sessionTicket []uint8; @"crypto/tls".vers uint16; @"crypto/tls".cipherSuite uint16; @"crypto/tls".masterSecret []byte; @"crypto/tls".serverCertificates []*@"crypto/x509".Certificate; @"crypto/tls".verifiedChains [][]*@"crypto/x509".Certificate }
-	type @"crypto/tls".ClientSessionCache interface { Get(@"crypto/tls".sessionKey string) (@"crypto/tls".session *@"crypto/tls".ClientSessionState, @"crypto/tls".ok bool); Put(@"crypto/tls".sessionKey string, @"crypto/tls".cs *@"crypto/tls".ClientSessionState) }
-	type @"sync".Locker interface { Lock(); Unlock() }
-	type @"sync".RWMutex struct { @"sync".w @"sync".Mutex; @"sync".writerSem uint32; @"sync".readerSem uint32; @"sync".readerCount int32; @"sync".readerWait int32 }
-	func (@"sync".rwÂ·1 *@"sync".RWMutex) Lock ()
-	func (@"sync".rwÂ·1 *@"sync".RWMutex) RLock ()
-	func (@"sync".rwÂ·2 *@"sync".RWMutex "esc:0x12") RLocker () (? @"sync".Locker) { return (*@"sync".rlocker)(@"sync".rwÂ·2) }
-	func (@"sync".rwÂ·1 *@"sync".RWMutex) RUnlock ()
-	func (@"sync".rwÂ·1 *@"sync".RWMutex) Unlock ()
-	type @"crypto/tls".ticketKey struct { @"crypto/tls".keyName [16]byte; @"crypto/tls".aesKey [16]byte; @"crypto/tls".hmacKey [16]byte }
-	type @"crypto/tls".Config struct { Rand @"io".Reader; Time func() (? @"time".Time); Certificates []@"crypto/tls".Certificate; NameToCertificate map[string]*@"crypto/tls".Certificate; GetCertificate func(@"crypto/tls".clientHello *@"crypto/tls".ClientHelloInfo) (? *@"crypto/tls".Certificate, ? error); RootCAs *@"crypto/x509".CertPool; NextProtos []string; ServerName string; ClientAuth @"crypto/tls".ClientAuthType; ClientCAs *@"crypto/x509".CertPool; InsecureSkipVerify bool; CipherSuites []uint16; PreferServerCipherSuites bool; SessionTicketsDisabled bool; SessionTicketKey [32]byte; ClientSessionCache @"crypto/tls".ClientSessionCache; MinVersion uint16; MaxVersion uint16; CurvePreferences []@"crypto/tls".CurveID; @"crypto/tls".serverInitOnce @"sync".Once; @"crypto/tls".mutex @"sync".RWMutex; @"crypto/tls".sessionTicketKeys []@"crypto/tls".ticketKey }
-	func (@"crypto/tls".cÂ·1 *@"crypto/tls".Config "esc:0x9") BuildNameToCertificate ()
-	func (@"crypto/tls".cÂ·1 *@"crypto/tls".Config) SetSessionTicketKeys (@"crypto/tls".keysÂ·2 [][32]byte "esc:0x1")
-	func (@"crypto/tls".cÂ·2 *@"crypto/tls".Config "esc:0x22") @"crypto/tls".cipherSuites () (? []uint16)
-	func (@"crypto/tls".cÂ·2 *@"crypto/tls".Config "esc:0x22") @"crypto/tls".curvePreferences () (? []@"crypto/tls".CurveID) { if @"crypto/tls".cÂ·2 == nil || len(@"crypto/tls".cÂ·2.CurvePreferences) == 0x0 { return @"crypto/tls".defaultCurvePreferences }; return @"crypto/tls".cÂ·2.CurvePreferences }
-	func (@"crypto/tls".cÂ·3 *@"crypto/tls".Config "esc:0x22") @"crypto/tls".getCertificate (@"crypto/tls".clientHelloÂ·4 *@"crypto/tls".ClientHelloInfo) (? *@"crypto/tls".Certificate, ? error)
-	func (@"crypto/tls".cÂ·2 *@"crypto/tls".Config "esc:0x1") @"crypto/tls".maxVersion () (? uint16) { if @"crypto/tls".cÂ·2 == nil || @"crypto/tls".cÂ·2.MaxVersion == 0x0 { return 0x303 }; return @"crypto/tls".cÂ·2.MaxVersion }
-	func (@"crypto/tls".cÂ·2 *@"crypto/tls".Config "esc:0x1") @"crypto/tls".minVersion () (? uint16) { if @"crypto/tls".cÂ·2 == nil || @"crypto/tls".cÂ·2.MinVersion == 0x0 { return 0x301 }; return @"crypto/tls".cÂ·2.MinVersion }
-	func (@"crypto/tls".cÂ·3 *@"crypto/tls".Config "esc:0x1") @"crypto/tls".mutualVersion (@"crypto/tls".versÂ·4 uint16) (? uint16, ? bool) { var @"crypto/tls".minVersionÂ·5 uint16; ; @"crypto/tls".minVersionÂ·5 = @"crypto/tls".cÂ·3.@"crypto/tls".minVersion(); var @"crypto/tls".maxVersionÂ·6 uint16; ; @"crypto/tls".maxVersionÂ·6 = @"crypto/tls".cÂ·3.@"crypto/tls".maxVersion(); if @"crypto/tls".versÂ·4 < @"crypto/tls".minVersionÂ·5 { return 0x0, false }; if @"crypto/tls".versÂ·4 > @"crypto/tls".maxVersionÂ·6 { @"crypto/tls".versÂ·4 = @"crypto/tls".maxVersionÂ·6 }; return @"crypto/tls".versÂ·4, true }
-	func (@"crypto/tls".cÂ·2 *@"crypto/tls".Config "esc:0x22") @"crypto/tls".rand () (? @"io".Reader) { var @"crypto/tls".rÂ·3 @"io".Reader; ; @"crypto/tls".rÂ·3 = @"crypto/tls".cÂ·2.Rand; if @"crypto/tls".rÂ·3 == nil { return @"crypto/rand".Reader }; return @"crypto/tls".rÂ·3 }
-	func (@"crypto/tls".cÂ·1 *@"crypto/tls".Config) @"crypto/tls".serverInit ()
-	func (@"crypto/tls".cÂ·2 *@"crypto/tls".Config) @"crypto/tls".ticketKeys () (? []@"crypto/tls".ticketKey)
-	func (@"crypto/tls".cÂ·2 *@"crypto/tls".Config "esc:0x1") @"crypto/tls".time () (? @"time".Time)
-	type @"github.com/streadway/amqp".Table map[string]interface {}
-	func (@"github.com/streadway/amqp".tÂ·2 @"github.com/streadway/amqp".Table) Validate () (? error)
-	type @"net".Addr interface { Network() (? string); String() (? string) }
-	type @"net".Conn interface { Close() (? error); LocalAddr() (? @"net".Addr); Read(@"net".b []byte) (@"net".n int, @"net".err error); RemoteAddr() (? @"net".Addr); SetDeadline(@"net".t @"time".Time) (? error); SetReadDeadline(@"net".t @"time".Time) (? error); SetWriteDeadline(@"net".t @"time".Time) (? error); Write(@"net".b []byte) (@"net".n int, @"net".err error) }
-	type @"github.com/streadway/amqp".Config struct { SASL []@"github.com/streadway/amqp".Authentication; Vhost string; ChannelMax int; FrameSize int; Heartbeat @"time".Duration; TLSClientConfig *@"crypto/tls".Config; Properties @"github.com/streadway/amqp".Table; Dial func(@"github.com/streadway/amqp".network string, @"github.com/streadway/amqp".addr string) (? @"net".Conn, ? error) }
-	type @"github.com/streadway/amqp".Connection struct { @"github.com/streadway/amqp".destructor @"sync".Once; @"github.com/streadway/amqp".sendM @"sync".Mutex; @"github.com/streadway/amqp".m @"sync".Mutex; @"github.com/streadway/amqp".conn @"io".ReadWriteCloser; @"github.com/streadway/amqp".rpc chan @"github.com/streadway/amqp".message; @"github.com/streadway/amqp".writer *@"github.com/streadway/amqp".writer; @"github.com/streadway/amqp".sends chan @"time".Time; @"github.com/streadway/amqp".deadlines chan @"github.com/streadway/amqp".readDeadliner; @"github.com/streadway/amqp".allocator *@"github.com/streadway/amqp".allocator; @"github.com/streadway/amqp".channels map[uint16]*@"github.com/streadway/amqp".Channel; @"github.com/streadway/amqp".noNotify bool; @"github.com/streadway/amqp".closes []chan *@"github.com/streadway/amqp".Error; @"github.com/streadway/amqp".blocks []chan @"github.com/streadway/amqp".Blocking; @"github.com/streadway/amqp".errors chan *@"github.com/streadway/amqp".Error; Config @"github.com/streadway/amqp".Config; Major int; Minor int; Properties @"github.com/streadway/amqp".Table }
-	func (@"github.com/streadway/amqp".meÂ·3 *@"github.com/streadway/amqp".Connection) Channel () (? *@"github.com/streadway/amqp".Channel, ? error)
-	func (@"github.com/streadway/amqp".meÂ·2 *@"github.com/streadway/amqp".Connection) Close () (? error)
-	func (@"github.com/streadway/amqp".meÂ·2 *@"github.com/streadway/amqp".Connection "esc:0x9") LocalAddr () (? @"net".Addr)
-	func (@"github.com/streadway/amqp".meÂ·2 *@"github.com/streadway/amqp".Connection) NotifyBlocked (@"github.com/streadway/amqp".cÂ·3 chan @"github.com/streadway/amqp".Blocking) (? chan @"github.com/streadway/amqp".Blocking)
-	func (@"github.com/streadway/amqp".meÂ·2 *@"github.com/streadway/amqp".Connection) NotifyClose (@"github.com/streadway/amqp".cÂ·3 chan *@"github.com/streadway/amqp".Error) (? chan *@"github.com/streadway/amqp".Error)
-	func (@"github.com/streadway/amqp".meÂ·3 *@"github.com/streadway/amqp".Connection) @"github.com/streadway/amqp".allocateChannel () (? *@"github.com/streadway/amqp".Channel, ? error)
-	func (@"github.com/streadway/amqp".meÂ·2 *@"github.com/streadway/amqp".Connection) @"github.com/streadway/amqp".call (@"github.com/streadway/amqp".reqÂ·3 @"github.com/streadway/amqp".message, @"github.com/streadway/amqp".resÂ·4 ...@"github.com/streadway/amqp".message "esc:0x9") (? error)
-	func (@"github.com/streadway/amqp".meÂ·1 *@"github.com/streadway/amqp".Connection) @"github.com/streadway/amqp".closeChannel (@"github.com/streadway/amqp".chÂ·2 *@"github.com/streadway/amqp".Channel, @"github.com/streadway/amqp".eÂ·3 *@"github.com/streadway/amqp".Error)
-	func (@"github.com/streadway/amqp".meÂ·2 *@"github.com/streadway/amqp".Connection) @"github.com/streadway/amqp".closeWith (@"github.com/streadway/amqp".errÂ·3 *@"github.com/streadway/amqp".Error) (? error)
-	func (@"github.com/streadway/amqp".meÂ·1 *@"github.com/streadway/amqp".Connection) @"github.com/streadway/amqp".demux (@"github.com/streadway/amqp".fÂ·2 @"github.com/streadway/amqp".frame)
-	func (@"github.com/streadway/amqp".meÂ·1 *@"github.com/streadway/amqp".Connection) @"github.com/streadway/amqp".dispatch0 (@"github.com/streadway/amqp".fÂ·2 @"github.com/streadway/amqp".frame "esc:0x9")
-	func (@"github.com/streadway/amqp".meÂ·1 *@"github.com/streadway/amqp".Connection) @"github.com/streadway/amqp".dispatchClosed (@"github.com/streadway/amqp".fÂ·2 @"github.com/streadway/amqp".frame)
-	func (@"github.com/streadway/amqp".meÂ·1 *@"github.com/streadway/amqp".Connection) @"github.com/streadway/amqp".dispatchN (@"github.com/streadway/amqp".fÂ·2 @"github.com/streadway/amqp".frame)
-	func (@"github.com/streadway/amqp".meÂ·1 *@"github.com/streadway/amqp".Connection) @"github.com/streadway/amqp".heartbeater (@"github.com/streadway/amqp".intervalÂ·2 @"time".Duration, @"github.com/streadway/amqp".doneÂ·3 chan *@"github.com/streadway/amqp".Error "esc:0x1")
-	func (@"github.com/streadway/amqp".meÂ·2 *@"github.com/streadway/amqp".Connection "esc:0x1") @"github.com/streadway/amqp".isCapable (@"github.com/streadway/amqp".featureNameÂ·3 string "esc:0x1") (? bool) { var @"github.com/streadway/amqp".capabilitiesÂ·4 @"github.com/streadway/amqp".Table; ; @"github.com/streadway/amqp".capabilitiesÂ·4, _ = @"github.com/streadway/amqp".meÂ·2.Properties["capabilities"].(@"github.com/streadway/amqp".Table); var @"github.com/streadway/amqp".hasFeatureÂ·5 bool; ; @"github.com/streadway/amqp".hasFeatureÂ·5, _ = @"github.com/streadway/amqp".capabilitiesÂ·4[@"github.com/streadway/amqp".featureNameÂ·3].(bool); return @"github.com/streadway/amqp".hasFeatureÂ·5 }
-	func (@"github.com/streadway/amqp".meÂ·2 *@"github.com/streadway/amqp".Connection) @"github.com/streadway/amqp".open (@"github.com/streadway/amqp".configÂ·3 @"github.com/streadway/amqp".Config) (? error)
-	func (@"github.com/streadway/amqp".meÂ·3 *@"github.com/streadway/amqp".Connection) @"github.com/streadway/amqp".openChannel () (? *@"github.com/streadway/amqp".Channel, ? error)
-	func (@"github.com/streadway/amqp".meÂ·2 *@"github.com/streadway/amqp".Connection "esc:0x1") @"github.com/streadway/amqp".openComplete () (? error)
-	func (@"github.com/streadway/amqp".meÂ·2 *@"github.com/streadway/amqp".Connection) @"github.com/streadway/amqp".openStart (@"github.com/streadway/amqp".configÂ·3 @"github.com/streadway/amqp".Config) (? error)
-	func (@"github.com/streadway/amqp".meÂ·2 *@"github.com/streadway/amqp".Connection) @"github.com/streadway/amqp".openTune (@"github.com/streadway/amqp".configÂ·3 @"github.com/streadway/amqp".Config, @"github.com/streadway/amqp".authÂ·4 @"github.com/streadway/amqp".Authentication) (? error)
-	func (@"github.com/streadway/amqp".meÂ·2 *@"github.com/streadway/amqp".Connection) @"github.com/streadway/amqp".openVhost (@"github.com/streadway/amqp".configÂ·3 @"github.com/streadway/amqp".Config) (? error)
-	func (@"github.com/streadway/amqp".meÂ·1 *@"github.com/streadway/amqp".Connection) @"github.com/streadway/amqp".reader (@"github.com/streadway/amqp".rÂ·2 @"io".Reader)
-	func (@"github.com/streadway/amqp".meÂ·1 *@"github.com/streadway/amqp".Connection) @"github.com/streadway/amqp".releaseChannel (@"github.com/streadway/amqp".idÂ·2 uint16)
-	func (@"github.com/streadway/amqp".meÂ·2 *@"github.com/streadway/amqp".Connection) @"github.com/streadway/amqp".send (@"github.com/streadway/amqp".fÂ·3 @"github.com/streadway/amqp".frame) (? error)
-	func (@"github.com/streadway/amqp".meÂ·1 *@"github.com/streadway/amqp".Connection) @"github.com/streadway/amqp".shutdown (@"github.com/streadway/amqp".errÂ·2 *@"github.com/streadway/amqp".Error)
-	type @"github.com/streadway/amqp".Acknowledger interface { Ack(@"github.com/streadway/amqp".tag uint64, @"github.com/streadway/amqp".multiple bool) (? error); Nack(@"github.com/streadway/amqp".tag uint64, @"github.com/streadway/amqp".multiple bool, @"github.com/streadway/amqp".requeue bool) (? error); Reject(@"github.com/streadway/amqp".tag uint64, @"github.com/streadway/amqp".requeue bool) (? error) }
-	type @"github.com/streadway/amqp".Delivery struct { Acknowledger @"github.com/streadway/amqp".Acknowledger; Headers @"github.com/streadway/amqp".Table; ContentType string; ContentEncoding string; DeliveryMode uint8; Priority uint8; CorrelationId string; ReplyTo string; Expiration string; MessageId string; Timestamp @"time".Time; Type string; UserId string; AppId string; ConsumerTag string; MessageCount uint32; DeliveryTag uint64; Redelivered bool; Exchange string; RoutingKey string; Body []byte }
-	func (@"github.com/streadway/amqp".meÂ·2 @"github.com/streadway/amqp".Delivery) Ack (@"github.com/streadway/amqp".multipleÂ·3 bool) (? error)
-	func (@"github.com/streadway/amqp".meÂ·2 @"github.com/streadway/amqp".Delivery) Nack (@"github.com/streadway/amqp".multipleÂ·3 bool, @"github.com/streadway/amqp".requeueÂ·4 bool) (? error)
-	func (@"github.com/streadway/amqp".meÂ·2 @"github.com/streadway/amqp".Delivery) Reject (@"github.com/streadway/amqp".requeueÂ·3 bool) (? error)
-	type @"github.com/streadway/amqp".consumerBuffers map[string]chan *@"github.com/streadway/amqp".Delivery
-	type @"github.com/streadway/amqp".consumers struct { ? @"sync".Mutex; @"github.com/streadway/amqp".chans @"github.com/streadway/amqp".consumerBuffers }
-	func (@"github.com/streadway/amqp".meÂ·1 *@"github.com/streadway/amqp".consumers) @"github.com/streadway/amqp".add (@"github.com/streadway/amqp".tagÂ·2 string, @"github.com/streadway/amqp".consumerÂ·3 chan @"github.com/streadway/amqp".Delivery)
-	func (@"github.com/streadway/amqp".meÂ·2 *@"github.com/streadway/amqp".consumers) @"github.com/streadway/amqp".close (@"github.com/streadway/amqp".tagÂ·3 string "esc:0x1") (@"github.com/streadway/amqp".foundÂ·1 bool)
-	func (@"github.com/streadway/amqp".meÂ·1 *@"github.com/streadway/amqp".consumers) @"github.com/streadway/amqp".closeAll ()
-	func (@"github.com/streadway/amqp".meÂ·2 *@"github.com/streadway/amqp".consumers) @"github.com/streadway/amqp".send (@"github.com/streadway/amqp".tagÂ·3 string "esc:0x1", @"github.com/streadway/amqp".msgÂ·4 *@"github.com/streadway/amqp".Delivery) (? bool)
-	type @"github.com/streadway/amqp".Return struct { ReplyCode uint16; ReplyText string; Exchange string; RoutingKey string; ContentType string; ContentEncoding string; Headers @"github.com/streadway/amqp".Table; DeliveryMode uint8; Priority uint8; CorrelationId string; ReplyTo string; Expiration string; MessageId string; Timestamp @"time".Time; Type string; UserId string; AppId string; Body []byte }
-	type @"github.com/streadway/amqp".Confirmation struct { DeliveryTag uint64; Ack bool }
-	type @"github.com/streadway/amqp".confirms struct { @"github.com/streadway/amqp".m @"sync".Mutex; @"github.com/streadway/amqp".listeners []chan @"github.com/streadway/amqp".Confirmation; @"github.com/streadway/amqp".sequencer map[uint64]@"github.com/streadway/amqp".Confirmation; @"github.com/streadway/amqp".published uint64; @"github.com/streadway/amqp".expecting uint64 }
-	func (@"github.com/streadway/amqp".cÂ·2 *@"github.com/streadway/amqp".confirms) Close () (? error)
-	func (@"github.com/streadway/amqp".cÂ·1 *@"github.com/streadway/amqp".confirms) Listen (@"github.com/streadway/amqp".lÂ·2 chan @"github.com/streadway/amqp".Confirmation)
-	func (@"github.com/streadway/amqp".cÂ·1 *@"github.com/streadway/amqp".confirms) Multiple (@"github.com/streadway/amqp".confirmedÂ·2 @"github.com/streadway/amqp".Confirmation)
-	func (@"github.com/streadway/amqp".cÂ·1 *@"github.com/streadway/amqp".confirms) One (@"github.com/streadway/amqp".confirmedÂ·2 @"github.com/streadway/amqp".Confirmation)
-	func (@"github.com/streadway/amqp".cÂ·2 *@"github.com/streadway/amqp".confirms) Publish () (? uint64)
-	func (@"github.com/streadway/amqp".cÂ·1 *@"github.com/streadway/amqp".confirms "esc:0x1") @"github.com/streadway/amqp".confirm (@"github.com/streadway/amqp".confirmationÂ·2 @"github.com/streadway/amqp".Confirmation)
-	func (@"github.com/streadway/amqp".cÂ·1 *@"github.com/streadway/amqp".confirms "esc:0x1") @"github.com/streadway/amqp".resequence ()
-	type @"github.com/streadway/amqp".properties struct { ContentType string; ContentEncoding string; Headers @"github.com/streadway/amqp".Table; DeliveryMode uint8; Priority uint8; CorrelationId string; ReplyTo string; Expiration string; MessageId string; Timestamp @"time".Time; Type string; UserId string; AppId string; @"github.com/streadway/amqp".reserved1 string }
-	type @"github.com/streadway/amqp".messageWithContent interface { @"github.com/streadway/amqp".getContent() (? @"github.com/streadway/amqp".properties, ? []byte); @"github.com/streadway/amqp".id() (? uint16, ? uint16); @"github.com/streadway/amqp".read(? @"io".Reader) (? error); @"github.com/streadway/amqp".setContent(? @"github.com/streadway/amqp".properties, ? []byte); @"github.com/streadway/amqp".wait() (? bool); @"github.com/streadway/amqp".write(? @"io".Writer) (? error) }
-	type @"github.com/streadway/amqp".headerFrame struct { ChannelId uint16; ClassId uint16; @"github.com/streadway/amqp".weight uint16; Size uint64; Properties @"github.com/streadway/amqp".properties }
-	func (@"github.com/streadway/amqp".meÂ·2 *@"github.com/streadway/amqp".headerFrame "esc:0x1") @"github.com/streadway/amqp".channel () (? uint16) { return @"github.com/streadway/amqp".meÂ·2.ChannelId }
-	func (@"github.com/streadway/amqp".meÂ·2 *@"github.com/streadway/amqp".headerFrame "esc:0x9") @"github.com/streadway/amqp".write (@"github.com/streadway/amqp".wÂ·3 @"io".Writer) (@"github.com/streadway/amqp".errÂ·1 error)
-	type @"github.com/streadway/amqp".Publishing struct { Headers @"github.com/streadway/amqp".Table; ContentType string; ContentEncoding string; DeliveryMode uint8; Priority uint8; CorrelationId string; ReplyTo string; Expiration string; MessageId string; Timestamp @"time".Time; Type string; UserId string; AppId string; Body []byte }
-	type @"github.com/streadway/amqp".Queue struct { Name string; Messages int; Consumers int }
-	type @"github.com/streadway/amqp".Channel struct { @"github.com/streadway/amqp".destructor @"sync".Once; @"github.com/streadway/amqp".sendM @"sync".Mutex; @"github.com/streadway/amqp".m @"sync".Mutex; @"github.com/streadway/amqp".connection *@"github.com/streadway/amqp".Connection; @"github.com/streadway/amqp".rpc chan @"github.com/streadway/amqp".message; @"github.com/streadway/amqp".consumers *@"github.com/streadway/amqp".consumers; @"github.com/streadway/amqp".id uint16; @"github.com/streadway/amqp".noNotify bool; @"github.com/streadway/amqp".closes []chan *@"github.com/streadway/amqp".Error; @"github.com/streadway/amqp".flows []chan bool; @"github.com/streadway/amqp".returns []chan @"github.com/streadway/amqp".Return; @"github.com/streadway/amqp".cancels []chan string; @"github.com/streadway/amqp".confirms *@"github.com/streadway/amqp".confirms; @"github.com/streadway/amqp".confirming bool; @"github.com/streadway/amqp".errors chan *@"github.com/streadway/amqp".Error; @"github.com/streadway/amqp".recv func(? *@"github.com/streadway/amqp".Channel, ? @"github.com/streadway/amqp".frame) (? error); @"github.com/streadway/amqp".send func(? *@"github.com/streadway/amqp".Channel, ? @"github.com/streadway/amqp".message) (? error); @"github.com/streadway/amqp".message @"github.com/streadway/amqp".messageWithContent; @"github.com/streadway/amqp".header *@"github.com/streadway/amqp".headerFrame; @"github.com/streadway/amqp".body []byte }
-	func (@"github.com/streadway/amqp".meÂ·2 *@"github.com/streadway/amqp".Channel) Ack (@"github.com/streadway/amqp".tagÂ·3 uint64, @"github.com/streadway/amqp".multipleÂ·4 bool) (? error)
-	func (@"github.com/streadway/amqp".meÂ·2 *@"github.com/streadway/amqp".Channel) Cancel (@"github.com/streadway/amqp".consumerÂ·3 string, @"github.com/streadway/amqp".noWaitÂ·4 bool) (? error)
-	func (@"github.com/streadway/amqp".meÂ·2 *@"github.com/streadway/amqp".Channel) Close () (? error)
-	func (@"github.com/streadway/amqp".meÂ·2 *@"github.com/streadway/amqp".Channel) Confirm (@"github.com/streadway/amqp".noWaitÂ·3 bool) (? error)
-	func (@"github.com/streadway/amqp".meÂ·3 *@"github.com/streadway/amqp".Channel) Consume (@"github.com/streadway/amqp".queueÂ·4 string, @"github.com/streadway/amqp".consumerÂ·5 string, @"github.com/streadway/amqp".autoAckÂ·6 bool, @"github.com/streadway/amqp".exclusiveÂ·7 bool, @"github.com/streadway/amqp".noLocalÂ·8 bool, @"github.com/streadway/amqp".noWaitÂ·9 bool, @"github.com/streadway/amqp".argsÂ·10 @"github.com/streadway/amqp".Table) (? <-chan @"github.com/streadway/amqp".Delivery, ? error)
-	func (@"github.com/streadway/amqp".meÂ·2 *@"github.com/streadway/amqp".Channel) ExchangeBind (@"github.com/streadway/amqp".destinationÂ·3 string, @"github.com/streadway/amqp".keyÂ·4 string, @"github.com/streadway/amqp".sourceÂ·5 string, @"github.com/streadway/amqp".noWaitÂ·6 bool, @"github.com/streadway/amqp".argsÂ·7 @"github.com/streadway/amqp".Table) (? error)
-	func (@"github.com/streadway/amqp".meÂ·2 *@"github.com/streadway/amqp".Channel) ExchangeDeclare (@"github.com/streadway/amqp".nameÂ·3 string, @"github.com/streadway/amqp".kindÂ·4 string, @"github.com/streadway/amqp".durableÂ·5 bool, @"github.com/streadway/amqp".autoDeleteÂ·6 bool, @"github.com/streadway/amqp".internalÂ·7 bool, @"github.com/streadway/amqp".noWaitÂ·8 bool, @"github.com/streadway/amqp".argsÂ·9 @"github.com/streadway/amqp".Table) (? error)
-	func (@"github.com/streadway/amqp".meÂ·2 *@"github.com/streadway/amqp".Channel) ExchangeDeclarePassive (@"github.com/streadway/amqp".nameÂ·3 string, @"github.com/streadway/amqp".kindÂ·4 string, @"github.com/streadway/amqp".durableÂ·5 bool, @"github.com/streadway/amqp".autoDeleteÂ·6 bool, @"github.com/streadway/amqp".internalÂ·7 bool, @"github.com/streadway/amqp".noWaitÂ·8 bool, @"github.com/streadway/amqp".argsÂ·9 @"github.com/streadway/amqp".Table) (? error)
-	func (@"github.com/streadway/amqp".meÂ·2 *@"github.com/streadway/amqp".Channel) ExchangeDelete (@"github.com/streadway/amqp".nameÂ·3 string, @"github.com/streadway/amqp".ifUnusedÂ·4 bool, @"github.com/streadway/amqp".noWaitÂ·5 bool) (? error)
-	func (@"github.com/streadway/amqp".meÂ·2 *@"github.com/streadway/amqp".Channel) ExchangeUnbind (@"github.com/streadway/amqp".destinationÂ·3 string, @"github.com/streadway/amqp".keyÂ·4 string, @"github.com/streadway/amqp".sourceÂ·5 string, @"github.com/streadway/amqp".noWaitÂ·6 bool, @"github.com/streadway/amqp".argsÂ·7 @"github.com/streadway/amqp".Table) (? error)
-	func (@"github.com/streadway/amqp".meÂ·2 *@"github.com/streadway/amqp".Channel) Flow (@"github.com/streadway/amqp".activeÂ·3 bool) (? error)
-	func (@"github.com/streadway/amqp".meÂ·4 *@"github.com/streadway/amqp".Channel) Get (@"github.com/streadway/amqp".queueÂ·5 string, @"github.com/streadway/amqp".autoAckÂ·6 bool) (@"github.com/streadway/amqp".msgÂ·1 @"github.com/streadway/amqp".Delivery, @"github.com/streadway/amqp".okÂ·2 bool, @"github.com/streadway/amqp".errÂ·3 error)
-	func (@"github.com/streadway/amqp".meÂ·2 *@"github.com/streadway/amqp".Channel) Nack (@"github.com/streadway/amqp".tagÂ·3 uint64, @"github.com/streadway/amqp".multipleÂ·4 bool, @"github.com/streadway/amqp".requeueÂ·5 bool) (? error)
-	func (@"github.com/streadway/amqp".meÂ·2 *@"github.com/streadway/amqp".Channel) NotifyCancel (@"github.com/streadway/amqp".cÂ·3 chan string) (? chan string)
-	func (@"github.com/streadway/amqp".meÂ·2 *@"github.com/streadway/amqp".Channel) NotifyClose (@"github.com/streadway/amqp".cÂ·3 chan *@"github.com/streadway/amqp".Error) (? chan *@"github.com/streadway/amqp".Error)
-	func (@"github.com/streadway/amqp".meÂ·3 *@"github.com/streadway/amqp".Channel) NotifyConfirm (@"github.com/streadway/amqp".ackÂ·4 chan uint64, @"github.com/streadway/amqp".nackÂ·5 chan uint64) (? chan uint64, ? chan uint64)
-	func (@"github.com/streadway/amqp".meÂ·2 *@"github.com/streadway/amqp".Channel) NotifyFlow (@"github.com/streadway/amqp".cÂ·3 chan bool) (? chan bool)
-	func (@"github.com/streadway/amqp".meÂ·2 *@"github.com/streadway/amqp".Channel) NotifyPublish (@"github.com/streadway/amqp".confirmÂ·3 chan @"github.com/streadway/amqp".Confirmation) (? chan @"github.com/streadway/amqp".Confirmation)
-	func (@"github.com/streadway/amqp".meÂ·2 *@"github.com/streadway/amqp".Channel) NotifyReturn (@"github.com/streadway/amqp".cÂ·3 chan @"github.com/streadway/amqp".Return) (? chan @"github.com/streadway/amqp".Return)
-	func (@"github.com/streadway/amqp".meÂ·2 *@"github.com/streadway/amqp".Channel) Publish (@"github.com/streadway/amqp".exchangeÂ·3 string, @"github.com/streadway/amqp".keyÂ·4 string, @"github.com/streadway/amqp".mandatoryÂ·5 bool, @"github.com/streadway/amqp".immediateÂ·6 bool, @"github.com/streadway/amqp".msgÂ·7 @"github.com/streadway/amqp".Publishing) (? error)
-	func (@"github.com/streadway/amqp".meÂ·2 *@"github.com/streadway/amqp".Channel) Qos (@"github.com/streadway/amqp".prefetchCountÂ·3 int, @"github.com/streadway/amqp".prefetchSizeÂ·4 int, @"github.com/streadway/amqp".globalÂ·5 bool) (? error)
-	func (@"github.com/streadway/amqp".meÂ·2 *@"github.com/streadway/amqp".Channel) QueueBind (@"github.com/streadway/amqp".nameÂ·3 string, @"github.com/streadway/amqp".keyÂ·4 string, @"github.com/streadway/amqp".exchangeÂ·5 string, @"github.com/streadway/amqp".noWaitÂ·6 bool, @"github.com/streadway/amqp".argsÂ·7 @"github.com/streadway/amqp".Table) (? error)
-	func (@"github.com/streadway/amqp".meÂ·3 *@"github.com/streadway/amqp".Channel) QueueDeclare (@"github.com/streadway/amqp".nameÂ·4 string, @"github.com/streadway/amqp".durableÂ·5 bool, @"github.com/streadway/amqp".autoDeleteÂ·6 bool, @"github.com/streadway/amqp".exclusiveÂ·7 bool, @"github.com/streadway/amqp".noWaitÂ·8 bool, @"github.com/streadway/amqp".argsÂ·9 @"github.com/streadway/amqp".Table) (? @"github.com/streadway/amqp".Queue, ? error)
-	func (@"github.com/streadway/amqp".meÂ·3 *@"github.com/streadway/amqp".Channel) QueueDeclarePassive (@"github.com/streadway/amqp".nameÂ·4 string, @"github.com/streadway/amqp".durableÂ·5 bool, @"github.com/streadway/amqp".autoDeleteÂ·6 bool, @"github.com/streadway/amqp".exclusiveÂ·7 bool, @"github.com/streadway/amqp".noWaitÂ·8 bool, @"github.com/streadway/amqp".argsÂ·9 @"github.com/streadway/amqp".Table) (? @"github.com/streadway/amqp".Queue, ? error)
-	func (@"github.com/streadway/amqp".meÂ·3 *@"github.com/streadway/amqp".Channel) QueueDelete (@"github.com/streadway/amqp".nameÂ·4 string, @"github.com/streadway/amqp".ifUnusedÂ·5 bool, @"github.com/streadway/amqp".ifEmptyÂ·6 bool, @"github.com/streadway/amqp".noWaitÂ·7 bool) (? int, ? error)
-	func (@"github.com/streadway/amqp".meÂ·3 *@"github.com/streadway/amqp".Channel) QueueInspect (@"github.com/streadway/amqp".nameÂ·4 string) (? @"github.com/streadway/amqp".Queue, ? error)
-	func (@"github.com/streadway/amqp".meÂ·3 *@"github.com/streadway/amqp".Channel) QueuePurge (@"github.com/streadway/amqp".nameÂ·4 string, @"github.com/streadway/amqp".noWaitÂ·5 bool) (? int, ? error)
-	func (@"github.com/streadway/amqp".meÂ·2 *@"github.com/streadway/amqp".Channel) QueueUnbind (@"github.com/streadway/amqp".nameÂ·3 string, @"github.com/streadway/amqp".keyÂ·4 string, @"github.com/streadway/amqp".exchangeÂ·5 string, @"github.com/streadway/amqp".argsÂ·6 @"github.com/streadway/amqp".Table) (? error)
-	func (@"github.com/streadway/amqp".meÂ·2 *@"github.com/streadway/amqp".Channel) Recover (@"github.com/streadway/amqp".requeueÂ·3 bool) (? error)
-	func (@"github.com/streadway/amqp".meÂ·2 *@"github.com/streadway/amqp".Channel) Reject (@"github.com/streadway/amqp".tagÂ·3 uint64, @"github.com/streadway/amqp".requeueÂ·4 bool) (? error)
-	func (@"github.com/streadway/amqp".meÂ·2 *@"github.com/streadway/amqp".Channel) Tx () (? error)
-	func (@"github.com/streadway/amqp".meÂ·2 *@"github.com/streadway/amqp".Channel) TxCommit () (? error)
-	func (@"github.com/streadway/amqp".meÂ·2 *@"github.com/streadway/amqp".Channel) TxRollback () (? error)
-	func (@"github.com/streadway/amqp".meÂ·2 *@"github.com/streadway/amqp".Channel) @"github.com/streadway/amqp".call (@"github.com/streadway/amqp".reqÂ·3 @"github.com/streadway/amqp".message, @"github.com/streadway/amqp".resÂ·4 ...@"github.com/streadway/amqp".message "esc:0x9") (? error)
-	func (@"github.com/streadway/amqp".meÂ·1 *@"github.com/streadway/amqp".Channel) @"github.com/streadway/amqp".dispatch (@"github.com/streadway/amqp".msgÂ·2 @"github.com/streadway/amqp".message)
-	func (@"github.com/streadway/amqp".meÂ·2 *@"github.com/streadway/amqp".Channel) @"github.com/streadway/amqp".open () (? error)
-	func (@"github.com/streadway/amqp".meÂ·2 *@"github.com/streadway/amqp".Channel) @"github.com/streadway/amqp".recvContent (@"github.com/streadway/amqp".fÂ·3 @"github.com/streadway/amqp".frame "esc:0x9") (? error)
-	func (@"github.com/streadway/amqp".meÂ·2 *@"github.com/streadway/amqp".Channel) @"github.com/streadway/amqp".recvHeader (@"github.com/streadway/amqp".fÂ·3 @"github.com/streadway/amqp".frame) (? error)
-	func (@"github.com/streadway/amqp".meÂ·2 *@"github.com/streadway/amqp".Channel) @"github.com/streadway/amqp".recvMethod (@"github.com/streadway/amqp".fÂ·3 @"github.com/streadway/amqp".frame "esc:0x9") (? error)
-	func (@"github.com/streadway/amqp".meÂ·2 *@"github.com/streadway/amqp".Channel) @"github.com/streadway/amqp".sendClosed (@"github.com/streadway/amqp".msgÂ·3 @"github.com/streadway/amqp".message) (@"github.com/streadway/amqp".errÂ·1 error)
-	func (@"github.com/streadway/amqp".meÂ·2 *@"github.com/streadway/amqp".Channel) @"github.com/streadway/amqp".sendOpen (@"github.com/streadway/amqp".msgÂ·3 @"github.com/streadway/amqp".message) (@"github.com/streadway/amqp".errÂ·1 error)
-	func (@"github.com/streadway/amqp".meÂ·1 *@"github.com/streadway/amqp".Channel) @"github.com/streadway/amqp".shutdown (@"github.com/streadway/amqp".eÂ·2 *@"github.com/streadway/amqp".Error)
-	func (@"github.com/streadway/amqp".meÂ·2 *@"github.com/streadway/amqp".Channel "esc:0x1") @"github.com/streadway/amqp".transition (@"github.com/streadway/amqp".fÂ·3 func(? *@"github.com/streadway/amqp".Channel, ? @"github.com/streadway/amqp".frame) (? error)) (? error) { @"github.com/streadway/amqp".meÂ·2.@"github.com/streadway/amqp".recv = @"github.com/streadway/amqp".fÂ·3; return nil }
-	func @"".WaitForFile (@"".channelÂ·1 *@"github.com/streadway/amqp".Channel, @"".filePathÂ·2 string, @"".queueNameÂ·3 string)
-	type @"".FileChunk struct { Order int; Chunk []byte }
-	func @"".HandleChange (@"".changeÂ·1 *@"".Change)
-	func @"".Checksum (@"".pathÂ·2 string) (? string)
-	func @"".WatchLocalChanges ()
-	func @"".LockFile (@"".pathÂ·2 string) (? chan bool)
-	func @"".FileIsLocked (@"".pathÂ·2 string "esc:0x1") (? bool)
-	func @"".UnlockFile (@"".pathÂ·1 string "esc:0x1")
-	func @"".ListenForTransferRequests ()
-	func @"".HandleTransfer (@"".tÂ·1 @"".Transfer, @"".msgÂ·2 *@"github.com/streadway/amqp".Delivery "esc:0x1")
-	func @"".init ()
-	var @"time".months [12]string
-	var @"time".days [7]string
-	var @"time".Local *@"time".Location
-	var @"time".UTC *@"time".Location
-	func @"math/big".low64 (@"math/big".zÂ·2 @"math/big".nat "esc:0x1") (? uint64) { if len(@"math/big".zÂ·2) == 0x0 { return 0x0 }; var @"math/big".vÂ·3 uint64; ; @"math/big".vÂ·3 = uint64(@"math/big".zÂ·2[0x0]); if false && len(@"math/big".zÂ·2) > 0x1 { @"math/big".vÂ·3 |= uint64(@"math/big".zÂ·2[0x1]) << 0x20 }; return @"math/big".vÂ·3 }
-	func @"net".IPv4 (@"net".aÂ·2 byte, @"net".bÂ·3 byte, @"net".cÂ·4 byte, @"net".dÂ·5 byte) (? @"net".IP) { var @"net".pÂ·6 @"net".IP; ; @"net".pÂ·6 = make(@"net".IP, 0x10); copy(@"net".pÂ·6, @"net".v4InV6Prefix); @"net".pÂ·6[0xc] = @"net".aÂ·2; @"net".pÂ·6[0xd] = @"net".bÂ·3; @"net".pÂ·6[0xe] = @"net".cÂ·4; @"net".pÂ·6[0xf] = @"net".dÂ·5; return @"net".pÂ·6 }
-	type @"sync".rlocker struct { @"sync".w @"sync".Mutex; @"sync".writerSem uint32; @"sync".readerSem uint32; @"sync".readerCount int32; @"sync".readerWait int32 }
-	func (@"sync".rÂ·1 *@"sync".rlocker) Lock ()
-	func (@"sync".rÂ·1 *@"sync".rlocker) Unlock ()
-	var @"crypto/tls".defaultCurvePreferences []@"crypto/tls".CurveID
-	import rand "crypto/rand" // indirect
-	var @"crypto/rand".Reader @"io".Reader
-	var @"net".v4InV6Prefix []byte
-
-$$
- _go_.o          0           0     0     644     132662    `
-go object darwin amd64 go1.5.3 X:none
-
-!
-  go13ldencoding/json.a
-fmt.a
-log.aos.apath/filepath.astrconv.atime.a>github.com/blockloop/unison/q.a6github.com/streadway/amqp.acrypto/md5.aio.amath.a8github.com/howeyc/fsnotify.async.a ş&"".ListenForChanges  €/  ò.eH‹%    H„$8ÿÿÿH;A†”  HìH  1ÛH‰\$`H‰\$hè    H‹$H‹D$H‰„$¸   H‰    H‰Œ$°   €=     …5  H‰    è    H‹$H‰\$XH    H‰œ$Ğ   HÇ„$Ø   )   1ÛH‰œ$    H‰œ$¨   Hœ$    Hƒû „Ú
-  HÇ„$è      HÇ„$ğ      H‰œ$à   H    H‰$Hœ$Ğ   H‰\$HÇD$    è    H‹L$H‹D$ H‹œ$à   H‰Œ$   H‰H‰„$˜   €=     …K
-  H‰CH‹œ$à   H‰$H‹œ$è   H‰\$H‹œ$ğ   H‰\$è    H‹\$XH‰$H    H‰\$HÇD$   H    H‰\$HÇD$    ÆD$(ÆD$)ÆD$* ÆD$+ HÇD$0    è    H‹L$8H‹T$@H‰T$hH‰L$`Hƒù „*  1ÛH‰œ$€   H‰œ$ˆ   Hœ$€   Hƒû „ÿ   HÇ„$è      HÇ„$ğ      H‰œ$à   H‰$H‰T$è    H‹L$H‹D$H‹œ$à   H‰Œ$   H‰H‰„$˜   €=     …ˆ   H‰CH    H‰$HÇD$   H‹œ$à   H‰\$H‹œ$è   H‰\$H‹œ$ğ   H‰\$ è    H‹L$(H‹D$0H‰Œ$À   H‰$H‰„$È   H‰D$è    H\$H‹H‰$H‹KH‰L$è    LCL‰$H‰D$è    éeÿÿÿ‰éúşÿÿ1ÛH‰œ$€   H‰œ$ˆ   Hœ$€   Hƒû „T  HÇ„$è      HÇ„$ğ      H‰œ$à   H    H‰$H    H‰\$HÇD$    è    H‹L$H‹D$ H‹œ$à   H‰Œ$   H‰H‰„$˜   €=     …Æ  H‰CH    H‰$HÇD$   H‹œ$à   H‰\$H‹œ$è   H‰\$H‹œ$ğ   H‰\$ è    H    H‰$HÇD$    HÇD$    HÇD$    è    H‹D$ H‹\$XH‰$H‹    H‰\$H‹    H‰\$ÆD$ÆD$ ÆD$ ÆD$ H‰D$ è    H‹\$(H‰œ$ø   H‹\$0H‰œ$   H‹\$8H‰œ$  H‹\$@H‰œ$  H‹L$HH‹T$PH‰T$hH‰L$`Hƒù „!  1ÛH‰\$pH‰\$xH\$pHƒû „ÿ   HÇ„$è      HÇ„$ğ      H‰œ$à   H‰$H‰T$è    H‹L$H‹D$H‹œ$à   H‰Œ$   H‰H‰„$˜   €=     …ˆ   H‰CH    H‰$HÇD$   H‹œ$à   H‰\$H‹œ$è   H‰\$H‹œ$ğ   H‰\$ è    H‹L$(H‹D$0H‰Œ$À   H‰$H‰„$È   H‰D$è    H\$H‹H‰$H‹KH‰L$è    LCL‰$H‰D$è    éeÿÿÿ‰éúşÿÿ1ÛH‰œ$Ğ   H‰œ$Ø   1ÛH‰œ$  H‰œ$   H‰œ$(  H‰œ$0  H‰œ$8  H‰œ$@  Hœ$  Hƒû „C  HÇ„$è      HÇ„$ğ      H‰œ$à   H    H‰$Hœ$ø   H‰\$HƒD$HÇD$    è    H‹L$H‹D$ H‹œ$à   H‰Œ$   H‰H‰„$˜   €=     …®  H‰CH    H‰$Hœ$ø   H‰\$HƒD$HÇD$    è    H‹L$H‹D$ H‹œ$à   HƒÃH‰Œ$   H‰H‰„$˜   €=     …1  H‰CH    H‰$Hœ$Ğ   H‰\$HÇD$    è    H‹L$H‹D$ H‹œ$à   HƒÃ H‰Œ$   H‰H‰„$˜   €=     …º  H‰CH    H‰$HÇD$(   H‹œ$à   H‰\$H‹œ$è   H‰\$H‹œ$ğ   H‰\$ è    H‹\$XH‰$H‹    H‰\$H‹    H‰\$1ÛH‰\$H‰\$ H    H‰\$(HÇD$0   ÆD$8 HÇD$@    è    H‹L$HH‹T$PH‰T$hH‰L$`Hƒù „!  1ÛH‰\$pH‰\$xH\$pHƒû „ÿ   HÇ„$è      HÇ„$ğ      H‰œ$à   H‰$H‰T$è    H‹L$H‹D$H‹œ$à   H‰Œ$   H‰H‰„$˜   €=     …ˆ   H‰CH    H‰$HÇD$   H‹œ$à   H‰\$H‹œ$è   H‰\$H‹œ$ğ   H‰\$ è    H‹L$(H‹D$0H‰Œ$À   H‰$H‰„$È   H‰D$è    H\$H‹H‰$H‹KH‰L$è    LCL‰$H‰D$è    éeÿÿÿ‰éúşÿÿH    H‰$HÇD$3   1ÛH‰\$H‰\$H‰\$ è    H‹\$XH‰$H‹    H‰\$H‹    H‰\$1ÛH‰\$H‰\$ ÆD$( ÆD$) ÆD$* ÆD$+ HÇD$0    è    H‹D$8H‹L$@H‹T$HH‰T$hH‰L$`Hƒù „!  1ÛH‰\$pH‰\$xH\$pHƒû „ÿ   HÇ„$è      HÇ„$ğ      H‰œ$à   H‰$H‰T$è    H‹L$H‹D$H‹œ$à   H‰Œ$   H‰H‰„$˜   €=     …ˆ   H‰CH    H‰$HÇD$   H‹œ$à   H‰\$H‹œ$è   H‰\$H‹œ$ğ   H‰\$ è    H‹L$(H‹D$0H‰Œ$À   H‰$H‰„$È   H‰D$è    H\$H‹H‰$H‹KH‰L$è    LCL‰$H‰D$è    éeÿÿÿ‰éúşÿÿH‰D$Ç$   H    H‰D$è    HÄH  ÃLCL‰$H‰D$è    é3üÿÿLCL‰$H‰D$è    é¼ûÿÿLCL‰$H‰D$è    é?ûÿÿ‰é¶úÿÿLCL‰$H‰D$è    é'øÿÿ‰é¥÷ÿÿLCL‰$H‰D$è    é¢õÿÿ‰éõÿÿH-    H‰,$H‰L$è    é¸ôÿÿè    éGôÿÿ¦
-      ^
-  os.Hostname    "".hostname   ª 6runtime.writeBarrierEnabled   Æ  "".hostname   Ğ
-  Lgithub.com/blockloop/unison/q.MustChan   ğ  jgo.string."CONSUMER: got Channel, declaring Exchange"   ®  type.string   ì
-  runtime.convT2E   Â 6runtime.writeBarrierEnabled   ®
-  log.Println   Î  &go.string."changes"   ø  $go.string."fanout"   Ø
-  hgithub.com/streadway/amqp.(*Channel).ExchangeDeclare   ¸
-  runtime.convI2E   	 6runtime.writeBarrierEnabled   ²	  @go.string."Exchange Declare: %s"   ¤
-
-  fmt.Errorf   ô
-
-  runtime.convI2E   ¨
-  runtime.gopanic   Ğ
-  .runtime.writebarrierptr   ş  type.string   ”  "".hostname   º
-  runtime.convT2E    6runtime.writeBarrierEnabled   ´  Tgo.string."CONSUMER: declaring Queue (%s)"   ¦
-  log.Printf   ´  Htype.github.com/streadway/amqp.Table   ü
-  runtime.makemap   ¦  "".hostname   ¾ "".hostname   „
-  bgithub.com/streadway/amqp.(*Channel).QueueDeclare   º
-  runtime.convI2E    6runtime.writeBarrierEnabled   ´  :go.string."Queue Declare: %s"   ¦
-  fmt.Errorf   ö
-  runtime.convI2E   ª
-  runtime.gopanic   Ò
-  .runtime.writebarrierptr   ä  type.int   ®
-  runtime.convT2E   „ 6runtime.writeBarrierEnabled   ¨  type.int   ò
-  runtime.convT2E   Ğ 6runtime.writeBarrierEnabled   ô  type.string   ²
-  runtime.convT2E    6runtime.writeBarrierEnabled   ´  hgo.string."CONSUMER: binding to Exchange (key '%s')"   ¦
-  log.Printf   Æ  "".hostname   Ş "".hostname     &go.string."changes"   Ğ
-  \github.com/streadway/amqp.(*Channel).QueueBind   !
-  runtime.convI2E   ô! 6runtime.writeBarrierEnabled   ˜"  4go.string."Queue Bind: %s"   Š#
-  fmt.Errorf   Ú#
-  runtime.convI2E   $
-  runtime.gopanic   ¶$
-  .runtime.writebarrierptr   Ü$  ~go.string."CONSUMER: Queue bound to Exchange, starting Consume"   ¢%
-  log.Printf   Â%  "".hostname   Ú% "".hostname   À&
-  Xgithub.com/streadway/amqp.(*Channel).Consume   ˜(
-  runtime.convI2E   î( 6runtime.writeBarrierEnabled   ’)  :go.string."Queue Consume: %s"   „*
-  fmt.Errorf   Ô*
-  runtime.convI2E   ˆ+
-  runtime.gopanic   °+
-  .runtime.writebarrierptr   î+  "".handleÂ·f   ‚,
-  runtime.newproc   ¶,
-  .runtime.writebarrierptr   ä,
-  .runtime.writebarrierptr   ’-
-  .runtime.writebarrierptr   Î-
-  .runtime.writebarrierptr   Š.
-  .runtime.writebarrierptr   °.  "".hostname   Ì.
-  .runtime.writebarrierptr   à.
-  0runtime.morestack_noctxt      L"".autotmp_0047  "type.interface {} "".autotmp_0046  (type.[1]interface {} "".autotmp_0044  *type.*[1]interface {} "".autotmp_0043  &type.[]interface {} "".autotmp_0042  "type.interface {} "".autotmp_0041  (type.[1]interface {} "".autotmp_0039  *type.*[1]interface {} "".autotmp_0038  &type.[]interface {} "".autotmp_0037  "type.interface {} "".autotmp_0036  "type.interface {} "".autotmp_0035  "type.interface {} "".autotmp_0034 _(type.[3]interface {} "".autotmp_0031  &type.[]interface {} "".autotmp_0030  "type.interface {} "".autotmp_0029 ¯(type.[1]interface {} "".autotmp_0027  *type.*[1]interface {} "".autotmp_0026  &type.[]interface {} "".autotmp_0024  "type.interface {} "".autotmp_0023  (type.[1]interface {} "".autotmp_0021  *type.*[1]interface {} "".autotmp_0020  &type.[]interface {} "".autotmp_0019  "type.interface {} "".autotmp_0018 (type.[1]interface {} "".autotmp_0016  *type.*[1]interface {} "".autotmp_0015  &type.[]interface {} "".autotmp_0014 ï"type.interface {} "".autotmp_0013 Ï(type.[1]interface {} "".autotmp_0010 Ï&type.[]interface {} "".autotmp_0009 ¯type.string "".autotmp_0008  type.error "".autotmp_0007  type.error "".autotmp_0006  type.string "".autotmp_0005  type.error "".autotmp_0004 type.error "".autotmp_0003 ïtype.string "".state ŸHtype.github.com/streadway/amqp.Queue "".channel ßNtype.*github.com/streadway/amqp.Channel "".err Ïtype.error "ê³ À „F"9æsªß0?C¡Şs¡*O¡5L ~ .ÇaUpvVuvŠvV®¼UgvV6OlvV)	L	! TgclocalsÂ·e27b7e84a11c17d15d9903cbcdbcadf5 TgclocalsÂ·adcd7923675ece97f29e7a815c5f5284   /Users/bjones/projects/unison/src/github.com/blockloop/unison/changes.goş"".RequestFile  €  üeH‹%    H„$ĞıÿÿH;A†  Hì°  H    H‰œ$`  HÇ„$h     1ÛH‰œ$À  H‰œ$È  H‰œ$Ğ  H‰œ$Ø  Hœ$À  Hƒû „¼  HÇ„$     HÇ„$˜     H‰œ$ˆ  H    H‰$Hœ$`  H‰\$HÇD$    è    H‹L$H‹D$ H‹œ$ˆ  H‰Œ$@  H‰H‰„$H  €=     …-  H‰CH    H‰$H‹œ$¸  H‰\$Hƒ|$ „ù  HƒD$HÇD$    è    H‹L$H‹D$ H‹œ$ˆ  HƒÃH‰Œ$@  H‰H‰„$H  €=     …˜  H‰CH‹œ$ˆ  H‰$H‹œ$  H‰\$H‹œ$˜  H‰\$è    1ÛH‰œ$   H‰œ$(  è    H‹$H‰„$  H‰$1ÛH‰\$H‰\$ÆD$ ÆD$ÆD$ÆD$ HÇD$     è    H‹\$(H‰œ$   H‹\$0H‰œ$¨  H‹\$8H‰œ$°  H‹\$@H‰œ$¸  H‹L$HH‹T$PH‰”$(  H‰Œ$   Hƒù „*  1ÛH‰œ$0  H‰œ$8  Hœ$0  Hƒû „ÿ   HÇ„$     HÇ„$˜     H‰œ$ˆ  H‰$H‰T$è    H‹L$H‹D$H‹œ$ˆ  H‰Œ$@  H‰H‰„$H  €=     …ˆ   H‰CH    H‰$HÇD$   H‹œ$ˆ  H‰\$H‹œ$  H‰\$H‹œ$˜  H‰\$ è    H‹L$(H‹D$0H‰Œ$P  H‰$H‰„$X  H‰D$è    H\$H‹H‰$H‹KH‰L$è    LCL‰$H‰D$è    éeÿÿÿ‰éúşÿÿH    H‰$è    H‹D$H‹œ$¸  Hƒû „d  Hk@H‰„$  Hƒø „G  L@L‰D$H‰l$H-    H‰,$è    H‹œ$¸  Hƒû „  HkH‹œ$  Hƒû „ó  LC L‰D$H‰l$H-    H‰,$è    H‹œ$  H‹-    H‰kH‹-    €=     …›  H‰+H‹„$  H    H‰œ$@  H‰$H‰„$H  H‰D$è    H‹l$H‹T$H‹L$ H¼$à  1ÀHƒÇğè    H    H‰œ$è  HÇ„$ğ     H‰¬$p  H‰¬$˜  H‰”$x  H‰”$   H‰Œ$€  H‰Œ$¨  Hœ$   H¬$   H‹H‰M H‹KH‰MH‹œ$  H‰$H    H‰\$HÇD$   1ÛH‰\$H‰\$ ÆD$( ÆD$) H´$à  H|$0è    è    H‹œ$   H‰œ$   H‹œ$  H‰œ$(  H‹œ$  H‰\$H‹´$¸  Hƒş tRH^H|$H‹H‰H‹KH‰OHœ$   H|$(H‹H‰H‹KH‰OÇ$(   H    H‰D$è    HÄ°  Ã‰ëªH‰$H‰l$è    éUşÿÿ‰éşÿÿ‰ééıÿÿ‰ é²ıÿÿ‰é•ıÿÿLCL‰$H‰D$è    éUûÿÿ‰%    éûúÿÿLCL‰$H‰D$è    éÀúÿÿ‰é=úÿÿè    éÂùÿÿP
-      J  6go.string."requesting file"   ¨  type.string   æ
-  runtime.convT2E   ¼ 6runtime.writeBarrierEnabled   à  type.string   Â
-  runtime.convT2E     6runtime.writeBarrierEnabled   Œ
-  log.Println   º
-  Lgithub.com/blockloop/unison/q.MustChan   ¶
-  bgithub.com/streadway/amqp.(*Channel).QueueDeclare   Š
-
-  runtime.convI2E   à
- 6runtime.writeBarrierEnabled   „  :go.string."Queue Declare: %s"   ö
-  fmt.Errorf   Æ
-  runtime.convI2E   ú
-  runtime.gopanic   ¢
-  .runtime.writebarrierptr   È   type."".Transfer   Ú
-  "runtime.newobject   Ş  type.string   ğ
-  (runtime.typedmemmove   ê  type.string   ü
-  (runtime.typedmemmove   š "".hostname   °  "".hostname   ¼ 6runtime.writeBarrierEnabled   î  "type.*"".Transfer   ª
-  *encoding/json.Marshal   î
-Ä  runtime.duffzero   ü  8go.string."application/json"   è  2go.string."file-requests"   Ô
-¨  runtime.duffcopy   Ş
-  Xgithub.com/streadway/amqp.(*Channel).Publish   Ô  """.WaitForFileÂ·f   è
-  runtime.newproc   œ
-  .runtime.writebarrierptr   ‚
-  .runtime.writebarrierptr   È
-  .runtime.writebarrierptr   ê
-  0runtime.morestack_noctxt   à
-  """.autotmp_0063 ŸRtype.github.com/streadway/amqp.Publishing "".autotmp_0062 ¯"type.*"".Transfer "".autotmp_0061  "type.interface {} "".autotmp_0060 ÿ(type.[1]interface {} "".autotmp_0057  &type.[]interface {} "".autotmp_0056  "type.interface {} "".autotmp_0055 ß"type.interface {} "".autotmp_0054 ß(type.[2]interface {} "".autotmp_0051 Ï&type.[]interface {} "".autotmp_0050  "type.*"".Transfer "".autotmp_0049 ¿type.error "".autotmp_0048 Ÿtype.string "".req ÿtype.[]uint8 "".queue ŸHtype.github.com/streadway/amqp.Queue "".channel ¿Ntype.*github.com/streadway/amqp.Channel "".err Ÿtype.error "".change  type.*"".Change "à
-ß
-à
-€ À pÀ"è	:FªFp
-4Kne#A D ²Ó>ªvVKß
-3@ TgclocalsÂ·6e25916c194457f163fe7feace7d8c16 TgclocalsÂ·724cf1e318dde77bf42fef93ad503fec   /Users/bjones/projects/unison/src/github.com/blockloop/unison/changes.goş"".WaitForFile  €7  ì6eH‹%    H„$HüÿÿH;A†‘  Hì8  1ÀH¼$h  è    H‰„$¨   H‰„$°   H‹œ$@  H‰\$Ç$   H    H‰D$è    ƒø …/  H‹œ$H  H‰$H‹œ$P  H‰\$è    H‹D$H    H‰$H‰D$HÇD$    è    H‹œ$H  H‰\$H‹œ$P  H‰\$Ç$   H    H‰D$è    ƒø …¥  H‹œ$@  H‰$H‹œ$X  H‰\$H‹œ$`  H‰\$1ÛH‰\$H‰\$ ÆD$(ÆD$)ÆD$* ÆD$+ HÇD$0    è    H‹\$8H‰\$PH‹D$@H‹L$HH‰Œ$    H‰„$˜   Hƒø „f  H‰$H‹X ÿÓH‹\$H‰œ$  H‹\$H‰œ$  1ÛH‰œ$È   H‰œ$Ğ   Hœ$È   Hƒû „  HÇ„$8     HÇ„$@     H‰œ$0  H    H‰$Hœ$  H‰\$HÇD$    è    H‹L$H‹D$ H‹œ$0  H‰Œ$¸   H‰H‰„$À   €=     …ˆ   H‰CH    H‰$HÇD$!   H‹œ$0  H‰\$H‹œ$8  H‰\$H‹œ$@  H‰\$ è    H‹L$(H‹D$0H‰Œ$ø   H‰$H‰„$   H‰D$è    H\$H‹H‰$H‹KH‰L$è    LCL‰$H‰D$è    éeÿÿÿ‰éâşÿÿH    H‰œ$  HÇ„$  !   1ÛH‰œ$È   H‰œ$Ğ   Hœ$È   Hƒû „w
-  HÇ„$8     HÇ„$@     H‰œ$0  H    H‰$Hœ$  H‰\$HÇD$    è    H‹L$H‹D$ H‹œ$0  H‰Œ$¸   H‰H‰„$À   €=     …è	  H‰CH‹œ$0  H‰$H‹œ$8  H‰\$H‹œ$@  H‰\$è    1ÀH‰„$È  H‰„$Ğ  H‰„$Ø  H‰„$à  H„$È  Hƒø „~	  HÇ„$      HÇ„$(     H‰„$  H‹-    H‰hH‹-    €=     …$	  H‰(H‹¬$P  H‰ÃHƒÃH‰kH‹¬$H  €=     …Ş  H‰+H‰$H‹œ$   H‰\$H‹œ$(  H‰\$è    H‹L$H‹D$ H‰L$xH‰$H‰„$€   H‰D$HÇD$
-  ÇD$€  è    H‹\$ H‰\$XH‹D$(H‹\$0H‰œ$    H‰„$˜   Hƒø „e  H‹\$xH‰œ$  H‹œ$€   H‰œ$  1ÛH‰œ$¨  H‰œ$°  H‰œ$¸  H‰œ$À  Hœ$¨  Hƒû „ü  HÇ„$8     HÇ„$@     H‰œ$0  H    H‰$Hœ$  H‰\$HÇD$    è    H‹L$H‹D$ H‹œ$0  H‰Œ$¸   H‰H‰„$À   €=     …m  H‰CH‹œ$˜   H‰$H‹œ$    H‰\$è    H‹L$H‹D$H‹œ$0  HƒÃH‰Œ$¸   H‰H‰„$À   €=     …ş  H‰CH    H‰$HÇD$   H‹œ$0  H‰\$H‹œ$8  H‰\$H‹œ$@  H‰\$ è    H‹\$XH‰\$Ç$   H    H‰D$è    ƒø …  H¼$  1ÀHƒÇèè    H    H‰$H‹\$PH‰\$Hœ$  H‰\$è    H´$  H¼$è  è    H    HÇÀ   H    H‰$H‹œ$ø  H‰\$H‰Œ$è   H‰L$H‰„$ğ   H‰D$è    H‹\$ Hƒû „×  H‹H‹k1ÛH‰œ$  H‰œ$  H    H‰$H‰Œ$¸   H‰L$H‰¬$À   H‰l$Hœ$  H‰\$è    H‹œ$  H‰$H‹œ$  H‰\$è    H‹L$H‹D$H‹\$ H‰œ$   H‰„$ˆ   Hƒø „Ç  H    H‰$HÇD$4   1ÛH‰\$H‰\$H‰\$ è    H‹T$(H‹L$01ÛH‰œ$¨   H‰œ$°   Hœ$¨   Hƒû „h  HÇ„$8     HÇ„$@     H‰œ$0  H‰”$ø   H‰$H‰Œ$   H‰L$è    H‹L$H‹D$H‹œ$0  H‰Œ$¸   H‰H‰„$À   €=     …á  H‰CH‹œ$0  H‰$H‹œ$8  H‰\$H‹œ$@  H‰\$è    H    H‰œ$  HÇ„$     H‹œ$H  H‰œ$Ø   H‹œ$P  H‰œ$à   1ÛH‰œ$H  H‰œ$P  H‰œ$X  H‰œ$`  Hœ$H  Hƒû „<  HÇ„$8     HÇ„$@     H‰œ$0  H    H‰$Hœ$  H‰\$HÇD$    è    H‹L$H‹D$ H‹œ$0  H‰Œ$¸   H‰H‰„$À   €=     …­   H‰CH    H‰$Hœ$Ø   H‰\$HÇD$    è    H‹L$H‹D$ H‹œ$0  HƒÃH‰Œ$¸   H‰H‰„$À   €=     u=H‰CH‹œ$0  H‰$H‹œ$8  H‰\$H‹œ$@  H‰\$è    è    HÄ8  ÃLCL‰$H‰D$è    ë³LCL‰$H‰D$è    é@ÿÿÿ‰é½şÿÿLCL‰$H‰D$è    éşÿÿ‰é‘ıÿÿ1ÀH‰„$ˆ  H‰„$  H‰„$˜  H‰„$   H„$ˆ  H‰Hœ$ø  HhH‹H‰M H‹KH‰MH‹KH‰MH‰ÁH‹Hƒûÿ„ĞıÿÿH‹D$X1ÛH‹(Hƒı „ı  H‹UH‹EH‰T$hH‰”$  H‰D$pH‰„$  1ÛH‰œ$h  H‰œ$p  H‰œ$x  H‰œ$€  Hœ$h  Hƒû „   HÇ„$8     HÇ„$@     H‰œ$0  H    H‰$H‰L$`H‰L$Hƒ|$ „S  HÇD$    è    H‹L$H‹D$ H‹œ$0  H‰Œ$¸   H‰H‰„$À   €=     …ü   H‰CH    H‰$Hœ$  H‰\$HÇD$    è    H‹L$H‹D$ H‹œ$0  HƒÃH‰Œ$¸   H‰H‰„$À   €=     ……   H‰CH    H‰$HÇD$   H‹œ$0  H‰\$H‹œ$8  H‰\$H‹œ$@  H‰\$ è    H‹\$XH‰$H‹t$`Hƒş t)H^H|$H‹H‰H‹KH‰OH‹KH‰Oè    éÓùÿÿ‰ëÓLCL‰$H‰D$è    éhÿÿÿLCL‰$H‰D$è    éñşÿÿ‰%    é¡şÿÿ‰éYşÿÿ‰E éûıÿÿ‰é"úÿÿè    HÄ8  ÃLCL‰$H‰D$è    éïøÿÿLCL‰$H‰D$è    é€øÿÿ‰éı÷ÿÿH‰$H‰l$è    H‹„$  é
-÷ÿÿH‰$H‰l$è    H‹„$  éÄöÿÿ‰ é{öÿÿLCL‰$H‰D$è    éöÿÿ‰é‚õÿÿè    HÄ8  Ãè    HÄ8  Ãè    éJòÿÿ¬
-      Z
-Î  runtime.duffzero   °  Zgithub.com/streadway/amqp.(*Channel).CloseÂ·f   Ä
-  "runtime.deferproc   ’
-  "".LockFile   ª  type.chan bool   Ø
-  "runtime.chanrecv1   ¨   "".UnlockFileÂ·f   ¼
-  "runtime.deferproc   ö
-  Xgithub.com/streadway/amqp.(*Channel).Consume   ê       °  type.string   î
-  runtime.convT2E   Ä 6runtime.writeBarrierEnabled   è  Zgo.string."Failed to register a consumer: %s"   Ú	
-  fmt.Errorf   ª
-
-  runtime.convI2E   Ş
-
-  runtime.gopanic   †
-  .runtime.writebarrierptr   ¬  Zgo.string."waiting for file to be transfered"   ê  type.string   ¨
-  runtime.convT2E   ş 6runtime.writeBarrierEnabled   ê
-  log.Println     "".rootDir   ¶  "".rootDir   Â 6runtime.writeBarrierEnabled   ˜ 6runtime.writeBarrierEnabled   ò
-  $path/filepath.Join   Ş
-  os.OpenFile   ª  type.string   è
-  runtime.convT2E   ¾ 6runtime.writeBarrierEnabled   
-  runtime.convI2E   î 6runtime.writeBarrierEnabled   ’  Ngo.string."couldn't open local file %s"   „
-  log.Fatalf   ´  &os.(*File).CloseÂ·f   È
-  "runtime.deferproc   €
-Ú  runtime.duffzero     \type.<-chan github.com/streadway/amqp.Delivery   Î
-  "runtime.chanrecv1   ø
-ô  runtime.duffcopy   †  "go.string."Order"   ¢  Htype.github.com/streadway/amqp.Table   ‚
-  4runtime.mapaccess1_faststr   à  type.string   À
-  "runtime.assertE2T   ü
-  strconv.Atoi   Ü  €go.string."no order was present in the header for file transfer"   ¢
-  fmt.Errorf   ú 
-  runtime.convI2E   Ğ! 6runtime.writeBarrierEnabled   ¼"
-  log.Println   Ê"  Fgo.string."finished receiving file"   è$  type.string   ¦%
-  runtime.convT2E   ü% 6runtime.writeBarrierEnabled    &  type.string   Ş&
-  runtime.convT2E   ¼' 6runtime.writeBarrierEnabled    (
-  log.Println   ¬(
-  &runtime.deferreturn   à(
-  .runtime.writebarrierptr   ˆ)
-  .runtime.writebarrierptr   Ä)
-  .runtime.writebarrierptr   ¾-  type.int   .
-  runtime.convT2E   ä. 6runtime.writeBarrierEnabled   ˆ/  type.string   Æ/
-  runtime.convT2E   ¤0 6runtime.writeBarrierEnabled   È0  Tgo.string."writing chunk %d for file %s\n"   º1
-  log.Printf   ª2
-   os.(*File).Write   à2
-  .runtime.writebarrierptr   3
-  .runtime.writebarrierptr   è3
-  &runtime.deferreturn   œ4
-  .runtime.writebarrierptr   Ê4
-  .runtime.writebarrierptr   ş4
-  .runtime.writebarrierptr   ´5
-  .runtime.writebarrierptr   €6
-  .runtime.writebarrierptr   ¤6
-  &runtime.deferreturn   À6
-  &runtime.deferreturn   Ú6
-  0runtime.morestack_noctxt   Pğ  f"".autotmp_0117  "type.interface {} "".autotmp_0116  "type.interface {} "".autotmp_0115 ß(type.[2]interface {} "".autotmp_0113  *type.*[2]interface {} "".autotmp_0112  &type.[]interface {} "".autotmp_0111  "type.interface {} "".autotmp_0110  "type.interface {} "".autotmp_0109 Ÿ(type.[2]interface {} "".autotmp_0107  *type.*[2]interface {} "".autotmp_0106  &type.[]interface {} "".autotmp_0105 ß
-"type."".FileChunk "".autotmp_0103  "type.interface {} "".autotmp_0102 Ÿ(type.[1]interface {} "".autotmp_0100  *type.*[1]interface {} "".autotmp_0099  &type.[]interface {} "".autotmp_0098  "type.interface {} "".autotmp_0097  "type.interface {} "".autotmp_0096 Ÿ
-(type.[2]interface {} "".autotmp_0093  &type.[]interface {} "".autotmp_0092 ß	type.[2]string "".autotmp_0089 ¿type.[]string "".autotmp_0088  "type.interface {} "".autotmp_0087  (type.[1]interface {} "".autotmp_0085  *type.*[1]interface {} "".autotmp_0084  &type.[]interface {} "".autotmp_0083 ÿ"type.interface {} "".autotmp_0082 ß(type.[1]interface {} "".autotmp_0079 &type.[]interface {} "".autotmp_0078 ¿type.string "".autotmp_0077  type.string "".autotmp_0076  type.string "".autotmp_0075  type.error "".autotmp_0074  type.string "".autotmp_0073  "type.interface {} "".autotmp_0072 Ÿtype.string "".autotmp_0071 ÏNtype.github.com/streadway/amqp.Delivery "".autotmp_0070  type.string "".autotmp_0069  type.string "".autotmp_0068 ÿtype.error "".autotmp_0067 ßtype.string "".~r0 Ÿtype.string "".chunk ¯$type.*"".FileChunk "".err ßtype.error "".msg Ÿ	Ntype.github.com/streadway/amqp.Delivery "".file ¿type.*os.File "".fullPath ÿtype.string "".err ¿type.error "".msgs Ï\type.<-chan github.com/streadway/amqp.Delivery "".queueName 0type.string "".filePath type.string "".channel  Ntype.*github.com/streadway/amqp.Channel B"ğÿïğİïğïğïğ À ¬A.A;TææÎHå+OÙ÷ò2
-P8I5= š a•vV‘aÄ6ÅTz"CZ_qlaµ
-½2¥Ö8CA0 TgclocalsÂ·2129bc453331251978f36c09e524adae TgclocalsÂ·df2e73a019990ca45876cf1b4ab95c69   /Users/bjones/projects/unison/src/github.com/blockloop/unison/changes.goş"".handle     –eH‹%    H„$xüÿÿH;A†&  Hì  H‹œ$  H‰œ$@  H¼$à  1ÀHƒÇèè    H    H‰$H‹œ$@  H‰\$Hœ$à  H‰\$è    ¶\$1í@8ë„  H´$à  H¼$¸  è    H´$¸  H‰çè    Æ„$(   è    H    H‰$è    H‹D$H‰„$H  Hœ$È  H‹H‰$H‹KH‰L$H‹KH‰L$H    H‰œ$`  H‰\$H‰„$h  H‰D$ è    H‹D$(H‹\$0H‰œ$X  H‰„$P  Hƒø „I  HÇ$    Hœ$È  H|$H‹H‰H‹KH‰OH‹KH‰Oè    H‹\$ H‰œ$  H‹\$(H‰œ$˜  1ÛH‰œ$€  H‰œ$ˆ  Hœ$€  Hƒû „Ô   HÇ„$¨     HÇ„$°     H‰œ$   H    H‰$Hœ$  H‰\$HÇD$    è    H‹D$H‹L$ H‹œ$   H‰„$`  H‰H‰Œ$h  €=     uLH‰KH    H‰$HÇD$   H‹œ$   H‰\$H‹œ$¨  H‰\$H‹œ$°  H‰\$ è    HÄ  ÃLCL‰$H‰L$è    ë¤‰é%ÿÿÿH‹œ$H  H‹H‰Œ$p  H‹CH‰„$x  H‹-    H9èu8H‰$H‰D$H‹-    H‰l$H‹-    H‰l$è    ¶\$ €û tHÄ  ÃH‹œ$H  H‰\$Ç$   H    H‰D$è    é6ıÿÿH    H‰$HÇD$(   1ÛH‰\$H‰\$H‰\$ è    HÄ  Ãè    éµüÿÿ6
-      ‚
-Ú  runtime.duffzero     \type.<-chan github.com/streadway/amqp.Delivery   Ö
-  "runtime.chanrecv2    
-ô  runtime.duffcopy   À
-ô  runtime.duffcopy   Ú
-  Lgithub.com/streadway/amqp.Delivery.Ack   è  type."".Change   ú
-  "runtime.newobject   ä  type.*"".Change   ¢
-  .encoding/json.Unmarshal   Ê
-  2runtime.slicebytetostring   ”  type.string   Ò
-  runtime.convT2E   ¨ 6runtime.writeBarrierEnabled   Ä  >go.string."Could not unmarshal"   ¶	
-  log.Printf   ê	
-  .runtime.writebarrierptr   È
- "".hostname   ò
-  "".hostname   Š "".hostname   
-   runtime.eqstring   ø  $"".HandleChangeÂ·f   Œ
-  runtime.newproc   ¤  hgo.string."CONSUMER: handle: changes channel closed"   ê
-  log.Printf   „
-  0runtime.morestack_noctxt     "".autotmp_0128 ¯
-type.string "".autotmp_0127  "type.interface {} "".autotmp_0126 
-(type.[1]interface {} "".autotmp_0123 Ï	&type.[]interface {} "".autotmp_0121 ÏNtype.github.com/streadway/amqp.Delivery "".autotmp_0120 ï	type.string "".autotmp_0118 \type.<-chan github.com/streadway/amqp.Delivery "".&change ÿ
-type.*"".Change "".err ï
-type.error "".msg Ÿ	Ntype.github.com/streadway/amqp.Delivery "".changes  \type.<-chan github.com/streadway/amqp.Delivery 2"Ä}[ Ğ Bü"rs¦[%* 0 jBdT„rZ7/ TgclocalsÂ·a9ea41aae9e32efcc8711d8fabe405fb TgclocalsÂ·9aa335a9c518fd294282b573e9d8d899   /Users/bjones/projects/unison/src/github.com/blockloop/unison/changes.goş"".HandleChange  à#  Ò#eH‹%    H„$¸şÿÿH;A†Ä  HìÈ  H‹Œ$Ğ  ¶Y:€û …ƒ  ¶Y9€û …v  1ÀH‰„$x  H‰„$€  H‰„$ˆ  H‰„$  H„$x  Hƒø „;  HÇ„$H     HÇ„$P     H‰„$@  H‹-    H‰hH‹-    €=     …Ù  H‰(Hƒù „Å  HiH‰ÃHƒÃH‰\$H‰l$H-    H‰,$è    H‹œ$@  H‰$H‹œ$H  H‰\$H‹œ$P  H‰\$è    H‹L$H‹D$ H‰L$PH‰$H‰D$XH‰D$è    H‹Œ$Ğ  H‹|$H‰|$0H‹t$H‰t$8H‹D$ H‹T$(H‰T$H¶Y8€û u¶Y;€û uHÄÈ  ÃH‰D$@Hƒø „U  H    H‰œ$    HÇ„$¨   "   H‰$H‹X ÿÓH‹\$H‰œ$   H‹\$H‰œ$˜   1ÛH‰œ$˜  H‰œ$   H‰œ$¨  H‰œ$°  H‰œ$¸  H‰œ$À  Hœ$˜  Hƒû „Ë  HÇ„$0     HÇ„$8     H‰œ$(  H    H‰$Hœ$    H‰\$HÇD$    è    H‹L$H‹D$ H‹œ$(  H‰Œ$€   H‰H‰„$ˆ   €=     …<  H‰CH    H‰$H‹œ$Ğ  H‰\$Hƒ|$ „  HƒD$HÇD$    è    H‹L$H‹D$ H‹œ$(  HƒÃH‰Œ$€   H‰H‰„$ˆ   €=     …§   H‰CH    H‰$Hœ$   H‰\$HÇD$    è    H‹L$H‹D$ H‹œ$(  HƒÃ H‰Œ$€   H‰H‰„$ˆ   €=     u7H‰CH‹œ$(  H‰$H‹œ$0  H‰\$H‹œ$8  H‰\$è    HÄÈ  ÃLCL‰$H‰D$è    ë¹LCL‰$H‰D$è    éFÿÿÿ‰%    éìşÿÿLCL‰$H‰D$è    é±şÿÿ‰é.şÿÿHƒù „™  H‹i H‰¬$à   ‹i(‰¬$è   H‹i0H‰¬$ğ   H‰4$H‹_(ÿÓH‹´$à   H‹D$‹L$H‹\$1ÛH‹    H‰„$ø   ‰Œ$   H‰”$  H‰„$°   ‰Œ$¸   H‰”$À   H‰„$  ‰Œ$  ‰Œ$Ğ   H‰”$   H‰”$Ø   H‰„$È   H9ÆŒİ  H9Æ…Í  ‹œ$è   9ËœÀ< „ª  H    H‰œ$    HÇ„$¨      1ÛH‰œ$X  H‰œ$`  H‰œ$h  H‰œ$p  Hœ$X  Hƒû „T  HÇ„$0     HÇ„$8     H‰œ$(  H    H‰$Hœ$    H‰\$HÇD$    è    H‹L$H‹D$ H‹œ$(  H‰Œ$€   H‰H‰„$ˆ   €=     …Å   H‰CH    H‰$H‹œ$Ğ  H‰\$Hƒ|$ „‘   HƒD$HÇD$    è    H‹L$H‹D$ H‹œ$(  HƒÃH‰Œ$€   H‰H‰„$ˆ   €=     u7H‰CH‹œ$(  H‰$H‹œ$0  H‰\$H‹œ$8  H‰\$è    HÄÈ  ÃLCL‰$H‰D$è    ë¹‰%    écÿÿÿLCL‰$H‰D$è    é(ÿÿÿ‰é¥şÿÿH‹\$PH‰$H‹\$XH‰\$è    H‹D$ H‹\$(H‰\$hH‰D$`Hƒø …İúÿÿH‹\$PH‰$H‹\$XH‰\$è    H‹D$H‹\$H‰\$xH‰D$pHƒø „§úÿÿH    H‰œ$    HÇ„$¨      H‹\$PH‰œ$   H‹\$XH‰œ$˜   1ÛH‰œ$X  H‰œ$`  H‰œ$h  H‰œ$p  Hœ$X  Hƒû „3  HÇ„$0     HÇ„$8     H‰œ$(  H    H‰$Hœ$    H‰\$HÇD$    è    H‹L$H‹D$ H‹œ$(  H‰Œ$€   H‰H‰„$ˆ   €=     …¤   H‰CH    H‰$Hœ$   H‰\$HÇD$    è    H‹L$H‹D$ H‹œ$(  HƒÃH‰Œ$€   H‰H‰„$ˆ   €=     u4H‰CH‹œ$(  H‰$H‹œ$0  H‰\$H‹œ$8  H‰\$è    é6ùÿÿLCL‰$H‰D$è    ë¼LCL‰$H‰D$è    éIÿÿÿ‰éÆşÿÿ1Àé8üÿÿHÇÀ   é,üÿÿ‰é`ûÿÿ‰é4øÿÿH‰$H‰l$è    H‹„$@  H‹Œ$Ğ  éøÿÿ‰ é¾÷ÿÿH‰L$Ç$   H    H‰D$è    HÄÈ  Ãè    é÷ÿÿf
-      ¶ "".rootDir   Ì  "".rootDir   Ø 6runtime.writeBarrierEnabled   ¸  type.string   Ê
-  (runtime.typedmemmove    
-  $path/filepath.Join   ä
-  os.Stat   š  \go.string."file appears to be already deleted"   Ú       à  type.string   	
-  runtime.convT2E   ô	 6runtime.writeBarrierEnabled   ˜
-  type.string   ú
-
-  runtime.convT2E   Ø 6runtime.writeBarrierEnabled   ü  type.string   º
-  runtime.convT2E   ˜ 6runtime.writeBarrierEnabled   ü
-  log.Println   °
-  .runtime.writebarrierptr   Ø
-  .runtime.writebarrierptr   
-  .runtime.writebarrierptr   ¦       à  time.UTC   ò  Fgo.string."local conflict for file"   Ğ  type.string   
-  runtime.convT2E   ä 6runtime.writeBarrierEnabled   ˆ  type.string   ê
-  runtime.convT2E   È 6runtime.writeBarrierEnabled   ¬
-  log.Println   à
-  .runtime.writebarrierptr    
-  .runtime.writebarrierptr   è
-  os.Stat   Ô
-  os.Remove     Ngo.string."could not delete local file"   °  type.string   î
-  runtime.convT2E   Ä 6runtime.writeBarrierEnabled   è  type.string   ¦
-  runtime.convT2E   „  6runtime.writeBarrierEnabled   è 
-  log.Println   –!
-  .runtime.writebarrierptr   ¾!
-  .runtime.writebarrierptr   ´"
-  .runtime.writebarrierptr   ’#  """.RequestFileÂ·f   ¦#
-  runtime.newproc   À#
-  0runtime.morestack_noctxt     @"".autotmp_0160  "type.interface {} "".autotmp_0159  "type.interface {} "".autotmp_0158  (type.[2]interface {} "".autotmp_0156  *type.*[2]interface {} "".autotmp_0155  &type.[]interface {} "".autotmp_0154  "type.interface {} "".autotmp_0153  "type.interface {} "".autotmp_0152 ß(type.[2]interface {} "".autotmp_0149  &type.[]interface {} "".autotmp_0147 ïtype.time.Time "".autotmp_0146  "type.interface {} "".autotmp_0145  "type.interface {} "".autotmp_0144 "type.interface {} "".autotmp_0143 _(type.[3]interface {} "".autotmp_0140 ¿&type.[]interface {} "".autotmp_0139 Ÿtype.[2]string "".autotmp_0136 type.[]string "".autotmp_0135  type.string "".autotmp_0134  type.string "".autotmp_0133  type.string "".autotmp_0132 ïtype.string "".autotmp_0131 Ïtype.string time.uÂ·3 ÿtype.time.Time time.tÂ·2 Ïtype.time.Time "".~r0 ¯type.time.Time time.tÂ·2 Ÿtype.time.Time "".err ¯type.error "".err Ïtype.error "".infoErr type.error "".local ¯ type.os.FileInfo "".fullPath ïtype.string "".change  type.*"".Change D"Ø—¼ ğ n*
-ÚC&#øU×ä>66ì
-	21 X ä+"|¡¯|³ÏD	ƒ½O9 TgclocalsÂ·ba7cfad97585d573810c5f857a31c181 TgclocalsÂ·2d85f046b5afefe71b7c6075abc56243   /Users/bjones/projects/unison/src/github.com/blockloop/unison/changes.goş"".Checksum     ŒeH‹%    H„$8ÿÿÿH;A†!  HìH  1ÛH‰œ$`  H‰œ$h  H‹œ$P  H‰$H‹œ$X  H‰\$è    H‹L$H‹D$H‹\$ H‰œ$˜   H‰„$   Hƒø „7  H‹œ$P  H‰œ$ğ   H‹œ$X  H‰œ$ø   1ÛH‰œ$Ğ   H‰œ$Ø   Hœ$Ğ   Hƒû „ì   HÇ„$      HÇ„$(     H‰œ$  H    H‰$Hœ$ğ   H‰\$HÇD$    è    H‹L$H‹D$ H‹œ$  H‰Œ$À   H‰H‰„$È   €=     udH‰CH    H‰$HÇD$   H‹œ$  H‰\$H‹œ$   H‰\$H‹œ$(  H‰\$ è    1ÛH‰œ$`  H‰œ$h  è    HÄH  ÃLCL‰$H‰D$è    ëŒ‰éÿÿÿH‰L$PH‰L$Ç$   H    H‰D$è    ƒø …Q  H‹\$PH‰$è    H‹L$H‹D$H‰D$xH‰$H‰L$pH‹Y@ÿÓH‹D$H‰D$@òH*Èf(Áò    ò^Áò$è    òL$f.    ‚Ş  ò    ò\ÊòH,ÙH½       €H1ëH‰\$H1ÛH‰\$`H‰\$hH    H‰$è    H‹L$Ç#Eg½‰«Íï‰i½şÜº˜‰iÇAvT2HÇAP    HÇAX    H‰L$XH‹    1íH9è„$  H‹L$XH‰„$°   H‰Œ$¸   H‰D$`H‰„$€   H‰L$hH‰Œ$ˆ   1ÀH‹l$HH9èƒa  ò    ò$H‰ÃH‰D$8H‹l$@HÁãH)İòH*ÅòD$è    òD$òH,ØH‰ØH    H‰$H‰D$H‰D$è    H‹T$H‹L$ H‹D$(H‹\$PH‰$H‰”$   H‰T$H‰Œ$  H‰L$H‰„$  H‰D$è    H    H‰$H‹œ$€   H‰\$H‹œ$ˆ   H‰\$è    H‹\$H‰œ$    H‹\$ H‰œ$¨   HÇ$    H‹œ$   H‰\$H‹œ$  H‰\$H‹œ$  H‰\$è    H\$ H|$H‹H‰H‹KH‰OH‹œ$    H‰$H‹œ$¨   H‰\$è    H‹D$8HÿÀH‹l$HH9è‚Ÿşÿÿ1ÛH‰\$H‰\$H‰\$H‹œ$ˆ   H‰$H‹œ$€   H‹[8ÿÓH‹\$ H‰œ$0  H‹\$(H‰œ$8  H‹\$0H‰œ$@  1ÛH‰œ$Ğ   H‰œ$Ø   Hœ$Ğ   Hƒû „  HÇ„$      HÇ„$(     H‰œ$  H    H‰$Hœ$0  H‰\$HÇD$    è    H‹L$H‹D$ H‹œ$  H‰Œ$À   H‰H‰„$È   €=     u|H‰CH    H‰$HÇD$   H‹œ$  H‰\$H‹œ$   H‰\$H‹œ$(  H‰\$ è    H‹T$(H‹L$0H‰”$à   H‰”$`  H‰Œ$è   H‰Œ$h  è    HÄH  ÃLCL‰$H‰D$è    éqÿÿÿ‰éòşÿÿH    H‰$H    H‰\$H    H‰\$è    H‹D$éªüÿÿòH,Ùé6üÿÿè    HÄH  Ãè    éºùÿÿV
-      œ
-  os.Open   Ä  type.string   ‚
-  runtime.convT2E   Ø 6runtime.writeBarrierEnabled   ô  Jgo.string."couldn't checksum file %s"   æ
-  log.Printf   –
-  &runtime.deferreturn   Ê
-  .runtime.writebarrierptr   Œ  &os.(*File).CloseÂ·f    
-  "runtime.deferproc   Î
-  os.(*File).Stat          À  *$f64.40c0000000000000   Ü
-  math.Ceil   ø  *$f64.43e0000000000000   ”	  *$f64.43e0000000000000   ğ	  ,type.crypto/md5.digest   ‚
-
-  "runtime.newobject   ş
-  Hgo.itab.*crypto/md5.digest.hash.Hash   ¢  *$f64.40c0000000000000   ô
-  math.Min     type.[]uint8   Ä
-  "runtime.makeslice   Ì
-  os.(*File).Read   Ú  type.io.Writer    
-  runtime.convI2I   ¼
-  2runtime.slicebytetostring   ¨
-  io.WriteString   ®         type.[]uint8   Ì
-  runtime.convT2E   ¢ 6runtime.writeBarrierEnabled   ¾  go.string."%x"   °
-  fmt.Sprintf   
-  &runtime.deferreturn   Ä
-  .runtime.writebarrierptr   ê  .type.*crypto/md5.digest   €  type.hash.Hash   ˜  Hgo.itab.*crypto/md5.digest.hash.Hash   ¬
-   runtime.typ2Itab   à
-  &runtime.deferreturn   ú
-  0runtime.morestack_noctxt   @  2"".autotmp_0180  "type.interface {} "".autotmp_0179  (type.[1]interface {} "".autotmp_0177  *type.*[1]interface {} "".autotmp_0176  &type.[]interface {} "".autotmp_0175 Ïtype.io.Writer "".autotmp_0173 ¯type.hash.Hash "".autotmp_0172 "type.interface {} "".autotmp_0171 ï(type.[1]interface {} "".autotmp_0168 _&type.[]interface {} "".autotmp_0167 Ïtype.string "".autotmp_0166 /type.[]uint8 "".autotmp_0164  type.float64 "".autotmp_0163 ß.type.*crypto/md5.digest "".autotmp_0161 ¯type.string "".~r0 Ïtype.hash.Hash "".buf type.[]uint8 "".i Ÿtype.uint64 "".hash type.hash.Hash "".blocks ÿtype.uint64 "".filesize type.int64 "".info ¯ type.os.FileInfo "".err ïtype.error "".file ïtype.*os.File "".~r1  type.string "".path  type.string 4"ô¼g Ğ b 45ü +[”?)5®	„2
- T M³r+Ólx6Dr/4" TgclocalsÂ·9b863115b01c0fc3e8579508c9300b2a TgclocalsÂ·6255f76c3c5bfc98a680d045a618030f   ’/Users/bjones/projects/unison/src/github.com/blockloop/unison/checksum.goş"".init.1  À  ®eH‹%    H;a†ú   HƒìpH    H‰$HÇD$   è    H‹T$H‹L$H\$PH‰ØH‹-    H‰+H‹-    H‰kH‹-    H‰kH‹-    H‰kHÇD$@   HÇD$H   H‰\$8H‰L$0H‰KH‰T$(€=     u]H‰H‰$H‹\$@H‰\$H‹\$HH‰\$è    H‹\$ H‰    H‹\$€=     uH‰    HƒÄpÃH-    H‰,$H‰\$è    ëäH‰$H‰T$è    H‹D$8ë‘è    ééşÿÿ 
-      4   go.string."HOME"   X
-  os.Getenv   Š  """.statictmp_0184    """.statictmp_0184   ´  """.statictmp_0184   Ê0 """.statictmp_0184   ¨ 6runtime.writeBarrierEnabled   î
-  $path/filepath.Join   † "".rootDir   œ 6runtime.writeBarrierEnabled   °  "".rootDir   È  "".rootDir   ä
-  .runtime.writebarrierptr   „
-  .runtime.writebarrierptr   œ
-  0runtime.morestack_noctxt    à  "".autotmp_0186 ?type.[2]string "".autotmp_0183 otype.[]string "".autotmp_0182 type.string àÉßà?    0Å  +‹K TgclocalsÂ·7d2d5fca80364273fb07d5820a76fef4 TgclocalsÂ·5f572159a639a10c4a1aa53e8dfb92ea   /Users/bjones/projects/unison/src/github.com/blockloop/unison/locals.goş("".WatchLocalChanges  à	  Ş	eH‹%    HD$ğH;A†M  Hì   1ÀH‰D$hH‰D$pè    H‹$H‰D$0H‰D$Ç$   H    H‰D$è    è    H‹$H‰\$(H‹L$H‹T$H‰T$@H‰L$8Hƒù „›   1ÛH‰\$hH‰\$pH\$hHƒû „Á  HÇ„$€      HÇ„$ˆ      H‰\$xH‰$H‰T$è    H‹L$H‹D$H‹\$xH‰L$XH‰H‰D$`€=     …V  H‰CH‹\$xH‰$H‹œ$€   H‰\$H‹œ$ˆ   H‰\$è    H‹\$(H‰\$H‹\$0H‰\$Ç$   H    H‰D$è    H‹\$(H‰$H‹    H‰\$H‹    H‰\$è    H‹L$H‹T$ Hƒù „¡   1ÛH‰\$HH‰\$PH\$HHƒû „¢   HÇ„$€      HÇ„$ˆ      H‰\$xH‰L$8H‰$H‰T$@H‰T$è    H‹L$H‹D$H‹\$xH‰L$XH‰H‰D$`€=     u4H‰CH‹\$xH‰$H‹œ$€   H‰\$H‹œ$ˆ   H‰\$è    HÄ   ÃLCL‰$H‰D$è    ë¼‰éWÿÿÿLCL‰$H‰D$è    é—şÿÿ‰é8şÿÿè    é‘ıÿÿ&
-      X
-  Lgithub.com/blockloop/unison/q.MustChan     *"".declareExchangeÂ·f   ¤
-  runtime.newproc   ®
-  Jgithub.com/howeyc/fsnotify.NewWatcher   ˆ
-  runtime.convI2E   Ì 6runtime.writeBarrierEnabled   ²
-  log.Fatal   ö  :"".WatchLocalChanges.func1Â·f   Š
-  runtime.newproc   ª  "".rootDir   Â "".rootDir   Ö
-  Vgithub.com/howeyc/fsnotify.(*Watcher).Watch   
-  runtime.convI2E   â 6runtime.writeBarrierEnabled   À
-  log.Fatal   ô
-  .runtime.writebarrierptr   ª	
-  .runtime.writebarrierptr   Ì	
-  0runtime.morestack_noctxt       "".autotmp_0196  "type.interface {} "".autotmp_0195 (type.[1]interface {} "".autotmp_0193  *type.*[1]interface {} "".autotmp_0192  &type.[]interface {} "".autotmp_0191 o"type.interface {} "".autotmp_0190 O(type.[1]interface {} "".autotmp_0187 /&type.[]interface {} "".err ¯type.error "".watcher ÏPtype.*github.com/howeyc/fsnotify.Watcher "".channel ¿Ntype.*github.com/streadway/amqp.Channel  ŒŸ D ğ >8+	"›",0
-¡) . +&rU,&d
-Q TgclocalsÂ·0ce64bbc7cfa5ef04d41c861de81a3d7 TgclocalsÂ·60c6a174b5e8c126140742cce4df8109   /Users/bjones/projects/unison/src/github.com/blockloop/unison/locals.goş$"".declareExchange  À  ²eH‹%    HD$°H;A†7  HìĞ   1ÀH‰D$XH‰D$`H    H‰œ$ˆ   HÇ„$      H    H‰\$xHÇ„$€      1ÛH‰œ$°   H‰œ$¸   H‰œ$À   H‰œ$È   Hœ$°   Hƒû „¶  HÇ„$       HÇ„$¨      H‰œ$˜   H    H‰$Hœ$ˆ   H‰\$HÇD$    è    H‹L$H‹D$ H‹œ$˜   H‰L$hH‰H‰D$p€=     …-  H‰CH    H‰$H\$xH‰\$HÇD$    è    H‹L$H‹D$ H‹œ$˜   HƒÃH‰L$hH‰H‰D$p€=     …¿  H‰CH    H‰$HÇD$2   H‹œ$˜   H‰\$H‹œ$    H‰\$H‹œ$¨   H‰\$ è    H‹œ$Ø   H‰$H    H‰\$HÇD$   H    H‰\$HÇD$    ÆD$(ÆD$)ÆD$* ÆD$+ HÇD$0    è    H‹L$8H‹T$@H‰T$PH‰L$HHƒù „µ   1ÛH‰\$XH‰\$`H\$XHƒû „ã   HÇ„$       HÇ„$¨      H‰œ$˜   H‰$H‰T$è    H‹L$H‹D$H‹œ$˜   H‰L$hH‰H‰D$p€=     uvH‰CH    H‰$HÇD$   H‹œ$˜   H‰\$H‹œ$    H‰\$H‹œ$¨   H‰\$ è    H    H‰$HÇD$   1ÛH‰\$H‰\$H‰\$ è    HÄĞ   ÃLCL‰$H‰D$è    éwÿÿÿ‰éÿÿÿLCL‰$H‰D$è    é.şÿÿLCL‰$H‰D$è    éÀıÿÿ‰éCıÿÿè    é§üÿÿ0
-      \  $go.string."fanout"   ’  &go.string."changes"   ê  type.string   ¨
-  runtime.convT2E   ò 6runtime.writeBarrierEnabled   –  type.string   Î
-  runtime.convT2E     6runtime.writeBarrierEnabled   Ä  |go.string."PUBLISHER: got Channel, declaring %q Exchange (%q)"   ¶
-  log.Printf   Ü  &go.string."changes"   †  $go.string."fanout"   æ
-  hgithub.com/streadway/amqp.(*Channel).ExchangeDeclare   ´	
-  runtime.convI2E   ş	 6runtime.writeBarrierEnabled   š
-  @go.string."Exchange Declare: %s"   Œ
-  log.Fatalf   š  Pgo.string."PUBLISHER: declared Exchange"   à
-  log.Printf   ”
-  .runtime.writebarrierptr   Ğ
-  .runtime.writebarrierptr   ş
-  .runtime.writebarrierptr    
-  0runtime.morestack_noctxt      "".autotmp_0209  "type.interface {} "".autotmp_0208 ï(type.[1]interface {} "".autotmp_0205  &type.[]interface {} "".autotmp_0204  "type.interface {} "".autotmp_0203 Ï"type.interface {} "".autotmp_0202 ?(type.[2]interface {} "".autotmp_0199 o&type.[]interface {} "".autotmp_0198 ¯type.string "".autotmp_0197 type.string "".err type.error "".channel  Ntype.*github.com/streadway/amqp.Channel  ÜŸ d à 2x+ôSµ*5 & ÓÇXglD9 TgclocalsÂ·ea5138d814d46269fcb486a04203da7d TgclocalsÂ·7890eacb3e918683b03c8c23c2a21742   /Users/bjones/projects/unison/src/github.com/blockloop/unison/locals.goş"".handleChange  à!  Ê!eH‹%    H„$€ıÿÿH;A†@  Hì   1ÀH‰„$p  H‰„$x  1ÛH‰œ$  H‰œ$   H‹    H‰$H‹    H‰\$H‹´$  Hƒş „å  H^H|$H‹H‰H‹KH‰Oè    H‹L$ H‹D$(H‰Œ$0  H‰$H‰„$8  H‰D$è    H‹Œ$8  ¶\$€û t1ÛH‰œ$  H‰œ$   HÄ   ÃH‰Œ$  H‹œ$0  H‰œ$   H‰Œ$¨  1ÛH‰œ$  H‰œ$  H‰œ$   H‰œ$(  Hœ$  Hƒû „  HÇ„$      HÇ„$     H‰œ$ø  H    H‰$Hœ$  H‰\$HÇD$    è    H‹L$H‹D$ H‹œ$ø  H‰Œ$€  H‰H‰„$ˆ  €=     …‹  H‰CH    H‰$Hœ$   H‰\$HÇD$    è    H‹L$H‹D$ H‹œ$ø  HƒÃH‰Œ$€  H‰H‰„$ˆ  €=     …  H‰CH    H‰$HÇD$#   H‹œ$ø  H‰\$H‹œ$   H‰\$H‹œ$  H‰\$ è    H‹Œ$  ¶i@ˆ¬$  ‹ƒãƒû”Àˆ„$  ‹ƒãƒû„  ‹ƒãƒû”Àˆ„$  ‹ƒã ƒû ”Àˆ„$  è    H‹$‹L$H‹\$1ÛH‹    H‰”$È  H‰”$°  ‰Œ$Ğ  ‰Œ$¸  H‰„$Ø  H‰„$À  H‹´$  Hƒş „
-  H^H‹H‰$H‹KH‰L$è    H‹\$H‰œ$  H‹\$H‰œ$˜  H    H‰$è    H‹D$¶¬$  @ˆh:¶¬$  @ˆh8¶¬$  @ˆh9¶¬$  @ˆh;H‰„$(  H‹¬$°  H‰h ‹¬$¸  ‰h(H‹¬$À  €=     …@  H‰h0H‹¬$8  H‰hH‹¬$0  €=     …ü  H‰hH‹-    H‰hH‹-    €=     …¾  H‰(H‹¬$˜  H‰hHH‹¬$  €=     …{  H‰h@H‰„$   H    H‰œ$€  H‰$H‰„$ˆ  H‰D$è    H‹\$H‰œ$à  H‹\$H‰œ$è  H‹\$ H‰œ$ğ  H‹D$(H‹\$0H‰œ$H  H‰„$@  Hƒø „¯   H‹„$   1ÒH‰”$p  H‰”$x  H”$p  Hƒú „Ì  HÇ„$      HÇ„$     H    H‰”$ø  H‰œ$€  H‰H‰„$ˆ  €=     …f  H‰BH    H‰$HÇD$   H‰T$H‹œ$   H‰\$H‹œ$  H‰\$ è    H5    H¼$0  è    H    H‰$HÇD$    HÇD$    HÇD$    è    H‹\$ H‰œ$0  H‹œ$à  H‰œ$è  H‹œ$è  H‰œ$ğ  H‹œ$ğ  H‰œ$ø  H‹œ$  H‰$H    H‰\$HÇD$   1ÛH‰\$H‰\$ ÆD$( ÆD$) H´$0  H|$0è    è    H‹„$   H‹”$  Hƒø „,  1ÛH‰œ$`  H‰œ$h  Hœ$`  Hƒû „  HÇ„$      HÇ„$     H‰œ$ø  H‰„$P  H‰$H‰”$X  H‰T$è    H‹L$H‹D$H‹œ$ø  H‰Œ$€  H‰H‰„$ˆ  €=     u~H‰CH    H‰$HÇD$   H‹œ$ø  H‰\$H‹œ$   H‰\$H‹œ$  H‰\$ è    H‹œ$P  H‰$H‹œ$X  H‰\$è    H\$H‹H‰$H‹KH‰L$è    LCL‰$H‰D$è    éoÿÿÿ‰éøşÿÿ1ÛH‰œ$  H‰œ$   HÄ   ÃLBL‰$H‰D$è    H‹”$ø  éıÿÿ‰é-ıÿÿL@@L‰$H‰l$è    H‹„$(  éjüÿÿH‰$H‰l$è    H‹„$(  é*üÿÿL@L‰$H‰l$è    H‹„$(  ééûÿÿL@0L‰$H‰l$è    H‹„$(  é¥ûÿÿ‰éïúÿÿHÇÀ   éoúÿÿLCL‰$H‰D$è    éÙùÿÿLCL‰$H‰D$è    ébùÿÿ‰éßøÿÿ‰éøÿÿè    é›÷ÿÿh
-      ’  "".rootDir   ¨ "".rootDir   
-  "path/filepath.Rel   Ş
-  "".FileIsLocked   ¬  type.int   ê
-  runtime.convT2E   À 6runtime.writeBarrierEnabled   ä  type.string   ¢
-  runtime.convT2E   € 6runtime.writeBarrierEnabled   ¤  ^go.string."PUBLISHER: publishing %dB path (%q)"   –	
-  log.Printf   Ğ
-
-  time.Now   ü
-  time.UTC   ®
-  "".Checksum   ğ  type."".Change   ‚
-  "runtime.newobject   Ä 6runtime.writeBarrierEnabled    6runtime.writeBarrierEnabled   ² "".hostname   È  "".hostname   Ô 6runtime.writeBarrierEnabled   œ 6runtime.writeBarrierEnabled   Ğ  type.*"".Change   Œ
-  *encoding/json.Marshal   ¸  type.*"".Change   ú 6runtime.writeBarrierEnabled     Fgo.string."ERROR marshaling msg %s"   €
-  log.Fatalf     """.statictmp_0231   ¨
-¨  runtime.duffcopy   ¶  Htype.github.com/streadway/amqp.Table   ş
-  runtime.makemap     &go.string."changes"   Š
-¨  runtime.duffcopy   ”
-  Xgithub.com/streadway/amqp.(*Channel).Publish   Œ
-  runtime.convI2E   â 6runtime.writeBarrierEnabled   ş  @go.string."Exchange Publish: %s"   ğ
-  log.Fatalf   ¬
-  runtime.convI2E   à
-  runtime.gopanic   ˆ
-  .runtime.writebarrierptr   ø
-  .runtime.writebarrierptr   Ä
-  .runtime.writebarrierptr   ú
-  .runtime.writebarrierptr   ¸
-  .runtime.writebarrierptr   ö
-  .runtime.writebarrierptr   Ú 
-  .runtime.writebarrierptr   ˆ!
-  .runtime.writebarrierptr   ¸!
-  0runtime.morestack_noctxt   @€  D"".autotmp_0237  "type.interface {} "".autotmp_0236 ¿(type.[1]interface {} "".autotmp_0234  *type.*[1]interface {} "".autotmp_0233  &type.[]interface {} "".autotmp_0230 ŸRtype.github.com/streadway/amqp.Publishing "".autotmp_0229 Ÿ(type.[1]interface {} "".autotmp_0226  &type.[]interface {} "".autotmp_0225 ¯type.*"".Change "".autotmp_0224  type.bool "".autotmp_0223  type.bool "".autotmp_0222  type.bool "".autotmp_0221  "type.interface {} "".autotmp_0220 ÿ"type.interface {} "".autotmp_0219 ß(type.[2]interface {} "".autotmp_0216 &type.[]interface {} "".autotmp_0215  type.*"".Change "".autotmp_0214  type.*"".Change "".autotmp_0213 ßtype.string "".autotmp_0212 ¿type.string "".autotmp_0211 Ïtype.int "".~r0 Ÿtype.time.Time time.tÂ·2 ïtype.time.Time "".~r0 Ótype.bool "".~r0 Ñtype.bool "".~r0 Õtype.bool "".~r0 ×type.bool "".err ßtype.error "".err ÿtype.error "".msg ¿type.[]uint8 "".change ¿type.*"".Change "".path Ÿtype.string "".~r2  type.error 
-"".ev Ttype.*github.com/howeyc/fsnotify.FileEvent "".channel  Ntype.*github.com/streadway/amqp.Channel *"€¼ÿ€ÿ€‚ ğ  šFO0ø IZ£f¯	h.I9:
-Ô:I&Y		5 b †(ÆÖ]o*…ú?‹|r.8&>2	D TgclocalsÂ·9c1b3ea513cd4b324a63333b3bebd4a7 TgclocalsÂ·00debd00521aa39e570f6ba3b26820ec   /Users/bjones/projects/unison/src/github.com/blockloop/unison/locals.goş"".init.2  `  XeH‹%    H;avHƒìHÇ$   è    HƒÄÃè    ëÔ
-      8
-  log.SetFlags   L
-  0runtime.morestack_noctxt        0  
-  TgclocalsÂ·33cdeccccebe80329f1fdbee7f5874cb TgclocalsÂ·33cdeccccebe80329f1fdbee7f5874cb   Š/Users/bjones/projects/unison/src/github.com/blockloop/unison/main.goş"".main  à  ÒeH‹%    H;avSHƒìÇ$    H    H‰D$è    Ç$    H    H‰D$è    Ç$    H    H‰D$è    è    è    ë—
-      :  ."".WatchLocalChangesÂ·f   N
-  runtime.newproc   j  ,"".ListenForChangesÂ·f   ~
-  runtime.newproc   š  >"".ListenForTransferRequestsÂ·f   ®
-  runtime.newproc   ¸
-  runtime.block   Æ
-  0runtime.morestack_noctxt        
- ] p  
- &J TgclocalsÂ·33cdeccccebe80329f1fdbee7f5874cb TgclocalsÂ·33cdeccccebe80329f1fdbee7f5874cb   Š/Users/bjones/projects/unison/src/github.com/blockloop/unison/main.goş"".LockFile  €  ôeH‹%    HD$ÀH;A†  HìÀ   HÇ„$Ø       H‹    H‰$è    H‹    H‰\$Ç$   H    H‰D$è    ƒø …º  H‹Œ$È   H‹„$Ğ   H    H‰$H‹    H‰\$H‰L$xH‰L$H‰„$€   H‰D$è    H‹L$ ¶\$(H‹)H‰l$8HÇÅ   @8ë…¡  H    H‰\$hHÇD$p   H‹œ$È   H‰\$XH‹œ$Ğ   H‰\$`1ÛH‰œ$    H‰œ$¨   H‰œ$°   H‰œ$¸   Hœ$    Hƒû „7  HÇ„$      HÇ„$˜      H‰œ$ˆ   H    H‰$H\$hH‰\$HÇD$    è    H‹L$H‹D$ H‹œ$ˆ   H‰L$HH‰H‰D$P€=     …±   H‰CH    H‰$H\$XH‰\$HÇD$    è    H‹L$H‹D$ H‹œ$ˆ   HƒÃH‰L$HH‰H‰D$P€=     uJH‰CH‹œ$ˆ   H‰$H‹œ$   H‰\$H‹œ$˜   H‰\$è    H‹\$8H‰œ$Ø   è    HÄÀ   ÃLCL‰$H‰D$è    ë¦LCL‰$H‰D$è    é<ÿÿÿ‰éÂşÿÿH    H‰$HÇD$   è    H‹D$H‹œ$È   H‰\$hH‹œ$Ğ   H‰\$pH‰D$@H    H‰$H‹    H‰\$H\$hH‰\$H\$@H‰\$è    H    H‰$HÇD$   è    H‹D$H‰D$0H‰$è    H‹\$0H‰œ$Ø   è    HÄÀ   Ãè    HÄÀ   Ãè    éÆüÿÿ>
-      \  "".m   n
-  $sync.(*Mutex).Lock   |  "".m   ¢  .sync.(*Mutex).UnlockÂ·f   ¶
-  "runtime.deferproc   ö  2type.map[string]chan bool   Œ  "".locks   Î
-  4runtime.mapaccess2_faststr      Dgo.string."file is already locked"   ¦  type.string   Ş
-  runtime.convT2E   ¨ 6runtime.writeBarrierEnabled   Ì  type.string   „
-  runtime.convT2E   Ö 6runtime.writeBarrierEnabled   º
-  log.Println   à
-  &runtime.deferreturn   ”	
-  .runtime.writebarrierptr   ¼	
-  .runtime.writebarrierptr   â	  type.chan bool   †
-
-   runtime.makechan   Ü
-  2type.map[string]chan bool   ò
-  "".locks   ®
-  $runtime.mapassign1   ¼  type.chan bool   à
-   runtime.makechan   †
-  "runtime.closechan   ¬
-  &runtime.deferreturn   È
-  &runtime.deferreturn   â
-  0runtime.morestack_noctxt   0€  "".autotmp_0253  "type.interface {} "".autotmp_0252 ï"type.interface {} "".autotmp_0251 ?(type.[2]interface {} "".autotmp_0248 o&type.[]interface {} "".autotmp_0246 ÿtype.chan bool "".autotmp_0245  type.string "".autotmp_0244 Ïtype.string "".autotmp_0243 ¯type.string "".autotmp_0242 type.string "".ready Ÿtype.chan bool 
-"".ch type.chan bool "".~r1  type.chan bool "".path  type.string 4€œÿ€åÿ€ÿ€ À <+-eÔ2O 6 6pÈ®9T
-		, TgclocalsÂ·c3853ac9a227a3992c4b717e278f354f TgclocalsÂ·3bc4ed8845cba61334045b60262fa5c4   Š/Users/bjones/projects/unison/src/github.com/blockloop/unison/sync.goş"".FileIsLocked  €  ğeH‹%    H;a†›   Hƒì@ÆD$X H‹    H‰$è    H‹    H‰\$Ç$   H    H‰D$è    ƒø uNH‹L$HH‹D$PH    H‰$H‹    H‰\$H‰L$0H‰L$H‰D$8H‰D$è    ¶\$(ˆ\$Xè    HƒÄ@Ãè    HƒÄ@Ãè    éHÿÿÿ
-      >  "".m   P
-  $sync.(*Mutex).Lock   ^  "".m   „  .sync.(*Mutex).UnlockÂ·f   ˜
-  "runtime.deferproc   Ä  2type.map[string]chan bool   Ú  "".locks   –
-  4runtime.mapaccess2_faststr   ´
-  &runtime.deferreturn   Ê
-  &runtime.deferreturn   Ş
-  0runtime.morestack_noctxt   0€  "".autotmp_0254 type.string "".~r1  type.bool "".path  type.string "€‹€
-€ À >)?  '™ TgclocalsÂ·0b86ef39f3fed835f14ba5f4d7c62fa2 TgclocalsÂ·23e8278e2b69a3a75fa59b23c49ed6ad   Š/Users/bjones/projects/unison/src/github.com/blockloop/unison/sync.goş"".UnlockFile     ”eH‹%    H;a†í   HƒìPH‹    H‰$è    H‹    H‰\$Ç$   H    H‰D$è    ƒø …¡   H‹L$XH‹D$`H    H‰$H‹    H‰\$H‰L$@H‰L$H‰D$HH‰D$è    H‹L$ ¶\$(H‹	HÇÅ   @8ëuCH‰$è    H‹\$XH‰\$0H‹\$`H‰\$8H    H‰$H‹    H‰\$H\$0H‰\$è    è    HƒÄPÃè    HƒÄPÃè    éöşÿÿ 
-      4  "".m   F
-  $sync.(*Mutex).Lock   T  "".m   z  .sync.(*Mutex).UnlockÂ·f   
-  "runtime.deferproc   Â  2type.map[string]chan bool   Ø  "".locks   ”
-  4runtime.mapaccess2_faststr   Ø
-  "runtime.closechan     2type.map[string]chan bool   ¤  "".locks   Ì
-  "runtime.mapdelete   Ø
-  &runtime.deferreturn   î
-  &runtime.deferreturn   ‚
-  0runtime.morestack_noctxt       "".autotmp_0256 ?type.string "".autotmp_0255 type.string "".path  type.string & İŸ 
-Ÿ   &N-S	:	  "Ã& TgclocalsÂ·32bd5c6dc84e3e86dd35593b3922d3aa TgclocalsÂ·83ead081cd909acab0dcd88a450c1878   Š/Users/bjones/projects/unison/src/github.com/blockloop/unison/sync.goş"".failOnError     ŒeH‹%    HD$àH;A†ä  Hì    H‹œ$¨   Hƒû „Ã  H‹œ$¸   H‰\$XH‹œ$À   H‰\$`1ÛH‰œ$€   H‰œ$ˆ   H‰œ$   H‰œ$˜   Hœ$€   Hƒû „n  HÇD$p   HÇD$x   H‰\$hH    H‰$H\$XH‰\$HÇD$    è    H‹L$H‹D$ H‹\$hH‰L$8H‰H‰D$@€=     …ô   H‰CH‹œ$¨   H‰$H‹œ$°   H‰\$è    H‹L$H‹D$H‹\$hHƒÃH‰L$8H‰H‰D$@€=     …   H‰CH    H‰$HÇD$   H‹\$hH‰\$H‹\$pH‰\$H‹\$xH‰\$ è    H‹\$(H‰\$HH‹\$0H‰\$PH    H‰$H\$HH‰\$HÇD$    è    H\$H‹H‰$H‹KH‰L$è    LCL‰$H‰D$è    é_ÿÿÿLCL‰$H‰D$è    éùşÿÿ‰é‹şÿÿHÄ    Ãè    éúıÿÿ
-      ²  type.string   ê
-  runtime.convT2E   ® 6runtime.writeBarrierEnabled   €
-  runtime.convI2E   Ì 6runtime.writeBarrierEnabled   ğ  $go.string."%s: %s"   Ğ
-  fmt.Sprintf   †  type.string   ¾
-  runtime.convT2E   ò
-  runtime.gopanic   š
-  .runtime.writebarrierptr   È
-  .runtime.writebarrierptr   ú
-  0runtime.morestack_noctxt   @À  "".autotmp_0265  "type.interface {} "".autotmp_0264 Ï"type.interface {} "".autotmp_0263 ?(type.[2]interface {} "".autotmp_0260 o&type.[]interface {} "".autotmp_0259 ¯type.string "".autotmp_0258 type.string "".msg  type.string "".err  type.error ÀÜ¿À   Ã  ´³7.D TgclocalsÂ·e9cc1e3ee2257b90864bd391efacf3e1 TgclocalsÂ·d535dad3d6ce50e9472d7bc4413e272d   ’/Users/bjones/projects/unison/src/github.com/blockloop/unison/transfer.goş8"".ListenForTransferRequests  ÀK  ¸KeH‹%    H„$¸üÿÿH;A†·  HìÈ  1ÀH¼$`  è    H‰„$¨  H‰„$°  è    H‹$H‰„$H  H‰$H    H‰\$HÇD$   H    H‰\$HÇD$    ÆD$(ÆD$) ÆD$* ÆD$+ HÇD$0    è    H‹L$8H‹T$@H‰”$p  H‰Œ$h  Hƒù „*  1ÛH‰œ$Ø  H‰œ$à  Hœ$Ø  Hƒû „ÿ   HÇ„$0     HÇ„$8     H‰œ$(  H‰$H‰T$è    H‹L$H‹D$H‹œ$(  H‰Œ$È  H‰H‰„$Ğ  €=     …ˆ   H‰CH    H‰$HÇD$   H‹œ$(  H‰\$H‹œ$0  H‰\$H‹œ$8  H‰\$ è    H‹L$(H‹D$0H‰Œ$  H‰$H‰„$   H‰D$è    H\$H‹H‰$H‹KH‰L$è    LCL‰$H‰D$è    éeÿÿÿ‰éúşÿÿ1ÛH‰œ$Ø  H‰œ$à  Hœ$Ø  Hƒû „·  HÇ„$0     HÇ„$8     H‰œ$(  H    H‰$H    H‰\$HÇD$    è    H‹L$H‹D$ H‹œ$(  H‰Œ$È  H‰H‰„$Ğ  €=     …)  H‰CH    H‰$HÇD$   H‹œ$(  H‰\$H‹œ$0  H‰\$H‹œ$8  H‰\$ è    H‹L$(H‹D$0H‹œ$H  H‰$H‰Œ$  H‰L$H‰„$  H‰D$ÆD$ ÆD$ÆD$ÆD$ HÇD$     è    H‹\$(H‰œ$@  H‹\$0H‰œ$H  H‹\$8H‰œ$P  H‹\$@H‰œ$X  H‹D$HH‹L$PH‰Œ$€  H‰„$x  Hƒø „f  H‰$H‹X ÿÓH‹\$H‰œ$ø  H‹\$H‰œ$   1ÛH‰œ$¸  H‰œ$À  Hœ$¸  Hƒû „  HÇ„$0     HÇ„$8     H‰œ$(  H    H‰$Hœ$ø  H‰\$HÇD$    è    H‹L$H‹D$ H‹œ$(  H‰Œ$È  H‰H‰„$Ğ  €=     …ˆ   H‰CH    H‰$HÇD$   H‹œ$(  H‰\$H‹œ$0  H‰\$H‹œ$8  H‰\$ è    H‹L$(H‹D$0H‰Œ$  H‰$H‰„$   H‰D$è    H\$H‹H‰$H‹KH‰L$è    LCL‰$H‰D$è    éeÿÿÿ‰éâşÿÿH‹œ$H  H‰$Hœ$@  H|$H‹H‰H‹KH‰O1ÛH‰\$H‰\$ H    H‰\$(HÇD$0   ÆD$8 HÇD$@    è    H‹D$HH‹T$PH‰”$€  H‰„$x  Hƒø „*  1ÛH‰œ$¸  H‰œ$À  Hœ$¸  Hƒû „ÿ   HÇ„$0     HÇ„$8     H‰œ$(  H‰$H‰T$è    H‹L$H‹D$H‹œ$(  H‰Œ$È  H‰H‰„$Ğ  €=     …ˆ   H‰CH    H‰$HÇD$   H‹œ$(  H‰\$H‹œ$0  H‰\$H‹œ$8  H‰\$ è    H‹L$(H‹D$0H‰Œ$  H‰$H‰„$   H‰D$è    H\$H‹H‰$H‹KH‰L$è    LCL‰$H‰D$è    éeÿÿÿ‰éúşÿÿH‹œ$H  H‰$HÇD$   HÇD$    ÆD$ è    H‹D$ H‹L$(H‰Œ$€  H‰„$x  Hƒø „f  H‰$H‹X ÿÓH‹\$H‰œ$ø  H‹\$H‰œ$   1ÛH‰œ$¸  H‰œ$À  Hœ$¸  Hƒû „  HÇ„$0     HÇ„$8     H‰œ$(  H    H‰$Hœ$ø  H‰\$HÇD$    è    H‹L$H‹D$ H‹œ$(  H‰Œ$È  H‰H‰„$Ğ  €=     …ˆ   H‰CH    H‰$HÇD$   H‹œ$(  H‰\$H‹œ$0  H‰\$H‹œ$8  H‰\$ è    H‹L$(H‹D$0H‰Œ$  H‰$H‰„$   H‰D$è    H\$H‹H‰$H‹KH‰L$è    LCL‰$H‰D$è    éeÿÿÿ‰éâşÿÿH‹œ$H  H‰$Hœ$@  H|$H‹H‰H‹KH‰O1ÛH‰\$H‰\$ ÆD$( ÆD$) ÆD$* ÆD$+ HÇD$0    è    H‹\$8H‰œ$@  H‹D$@H‹L$HH‰Œ$€  H‰„$x  Hƒø „f  H‰$H‹X ÿÓH‹\$H‰œ$ø  H‹\$H‰œ$   1ÛH‰œ$¸  H‰œ$À  Hœ$¸  Hƒû „  HÇ„$0     HÇ„$8     H‰œ$(  H    H‰$Hœ$ø  H‰\$HÇD$    è    H‹L$H‹D$ H‹œ$(  H‰Œ$È  H‰H‰„$Ğ  €=     …ˆ   H‰CH    H‰$HÇD$    H‹œ$(  H‰\$H‹œ$0  H‰\$H‹œ$8  H‰\$ è    H‹L$(H‹D$0H‰Œ$  H‰$H‰„$   H‰D$è    H\$H‹H‰$H‹KH‰L$è    LCL‰$H‰D$è    éeÿÿÿ‰éâşÿÿH    H‰œ$ø  HÇ„$   "   1ÛH‰œ$¸  H‰œ$À  Hœ$¸  Hƒû „H  HÇ„$0     HÇ„$8     H‰œ$(  H    H‰$Hœ$ø  H‰\$HÇD$    è    H‹L$H‹D$ H‹œ$(  H‰Œ$È  H‰H‰„$Ğ  €=     …¹  H‰CH‹œ$(  H‰$H‹œ$0  H‰\$H‹œ$8  H‰\$è    H    H‰$è    H‹\$H‰œ$`  H‹œ$@  H‰œ$P  H¼$   1ÀHƒÇèè    H    H‰$H‹œ$P  H‰\$Hœ$   H‰\$è    ¶\$1í@8ë„  H‹œ$`  H¬$   H‰\$H‰l$H-    H‰,$è    H‹´$`  H‰çè    Æ„$(   è    H    H‰$è    H‹D$H‰„$X  H‹´$`  H  H‹H‰$H‹KH‰L$H‹KH‰L$H    H‰œ$È  H‰\$H‰„$Ğ  H‰D$ è    H‹D$(H‹\$0H‰œ$  H‰„$ˆ  Hƒø „  HÇ$    H‹´$`  H  H|$H‹H‰H‹KH‰OH‹KH‰Oè    H‹\$ H‰œ$ø  H‹\$(H‰œ$   H‹œ$  H‰$H‹œ$ˆ  H‹[ ÿÓH‹\$H‰œ$è  H‹\$H‰œ$ğ  1ÛH‰œ$€  H‰œ$ˆ  H‰œ$  H‰œ$˜  Hœ$€  Hƒû „P  HÇ„$0     HÇ„$8     H‰œ$(  H    H‰$Hœ$ø  H‰\$HÇD$    è    H‹L$H‹D$ H‹œ$(  H‰Œ$È  H‰H‰„$Ğ  €=     …Á  H‰CH    H‰$Hœ$è  H‰\$HÇD$    è    H‹L$H‹D$ H‹œ$(  HƒÃH‰Œ$È  H‰H‰„$Ğ  €=     …J  H‰CH    H‰$HÇD$)   H‹œ$(  H‰\$H‹œ$0  H‰\$H‹œ$8  H‰\$ è    H‹T$(H‹L$01ÛH‰œ$¨  H‰œ$°  Hœ$¨  Hƒû „Ñ   HÇ„$0     HÇ„$8     H‰œ$(  H‰”$  H‰$H‰Œ$   H‰L$è    H‹L$H‹D$H‹œ$(  H‰Œ$È  H‰H‰„$Ğ  €=     uQH‰CH‹œ$(  H‰$H‹œ$0  H‰\$H‹œ$8  H‰\$è    H‹´$`  H‰çè    Æ„$(   è    é0üÿÿLCL‰$H‰D$è    ëŸ‰é(ÿÿÿLCL‰$H‰D$è    é£şÿÿLCL‰$H‰D$è    é,şÿÿ‰é©ıÿÿH‹œ$X  H‹H‰Œ$  H‹CH‰„$  H‹-    H9èu4H‰$H‰D$H‹-    H‰l$H‹-    H‰l$è    ¶\$ €û …ûÿÿH    H‰œ$è  HÇ„$ğ      1ÛH‰œ$`  H‰œ$h  H‰œ$p  H‰œ$x  Hœ$`  Hƒû „p  HÇ„$0     HÇ„$8     H‰œ$(  H    H‰$Hœ$è  H‰\$HÇD$    è    H‹L$H‹D$ H‹œ$(  H‰Œ$È  H‰H‰„$Ğ  €=     …á   H‰CH    H‰$H‹œ$X  H‰\$HƒD$ HÇD$    è    H‹L$H‹D$ H‹œ$(  HƒÃH‰Œ$È  H‰H‰„$Ğ  €=     ukH‰CH‹œ$(  H‰$H‹œ$0  H‰\$H‹œ$8  H‰\$è    H‹´$X  H|$è    H‹œ$`  H‰\$@Ç$8   H    H‰D$è    éíùÿÿLCL‰$H‰D$è    ë…LCL‰$H‰D$è    éÿÿÿ‰é‰şÿÿH    H‰œ$è  HÇ„$ğ     1ÛH‰œ$˜  H‰œ$   Hœ$˜  Hƒû „¿   HÇ„$0     HÇ„$8     H‰œ$(  H    H‰$Hœ$è  H‰\$HÇD$    è    H‹L$H‹D$ H‹œ$(  H‰Œ$È  H‰H‰„$Ğ  €=     u7H‰CH‹œ$(  H‰$H‹œ$0  H‰\$H‹œ$8  H‰\$è    HÄÈ  ÃLCL‰$H‰D$è    ë¹‰é:ÿÿÿLCL‰$H‰D$è    é4øÿÿ‰é±÷ÿÿLCL‰$H‰D$è    éÄïÿÿ‰éBïÿÿè    é$íÿÿğ
-      Z
-ô  runtime.duffzero   „
-  Lgithub.com/blockloop/unison/q.MustChan   ²  2go.string."file-requests"   Ü  $go.string."fanout"   ¼
-  hgithub.com/streadway/amqp.(*Channel).ExchangeDeclare   ¨
-  runtime.convI2E   ş 6runtime.writeBarrierEnabled   ¢  @go.string."Exchange Declare: %s"   ”
-  fmt.Errorf   ä
-  runtime.convI2E   ˜
-  runtime.gopanic   À
-  .runtime.writebarrierptr   î  type.string   „	  "".hostname   ª	
-  runtime.convT2E   €
- 6runtime.writeBarrierEnabled   ¤
-  (go.string."%s-files"   –
-  fmt.Sprintf   º
-  bgithub.com/streadway/amqp.(*Channel).QueueDeclare   ‚       È  type.string   †
-  runtime.convT2E   Ü 6runtime.writeBarrierEnabled   €  Pgo.string."Failed to declare a queue %s"   ò
-  fmt.Errorf   Â
-  runtime.convI2E   ö
-  runtime.gopanic   
-  .runtime.writebarrierptr   ª  2go.string."file-requests"   ì
-  \github.com/streadway/amqp.(*Channel).QueueBind   Ø
-  runtime.convI2E   ® 6runtime.writeBarrierEnabled   Ò  4go.string."Queue Bind: %s"   Ä
-  fmt.Errorf   ”
-  runtime.convI2E   È
-  runtime.gopanic   ğ
-  .runtime.writebarrierptr   Ø
-  Pgithub.com/streadway/amqp.(*Channel).Qos   ¸       ş  type.string   ¼
-  runtime.convT2E   ’ 6runtime.writeBarrierEnabled   ¶  @go.string."Failed to set QoS %s"   ¨
-  fmt.Errorf   ø
-  runtime.convI2E   ¬ 
-  runtime.gopanic   Ô 
-  .runtime.writebarrierptr   –"
-  Xgithub.com/streadway/amqp.(*Channel).Consume   #       Ö$  type.string   ”%
-  runtime.convT2E   ê% 6runtime.writeBarrierEnabled   &  Xgo.string."Failed to register a consumer %s"   €'
-  fmt.Errorf   Ğ'
-  runtime.convI2E   „(
-  runtime.gopanic   ¬(
-  .runtime.writebarrierptr   Ò(  \go.string."awaiting file transfer requests..."   *  type.string   Î*
-  runtime.convT2E   ¤+ 6runtime.writeBarrierEnabled   ,
-  log.Println   ,  Ntype.github.com/streadway/amqp.Delivery   °,
-  "runtime.newobject   -
-Ú  runtime.duffzero   -  \type.<-chan github.com/streadway/amqp.Delivery   ä-
-  "runtime.chanrecv2   Æ.  Ntype.github.com/streadway/amqp.Delivery   Ø.
-  (runtime.typedmemmove   ø.
-ô  runtime.duffcopy   ’/
-  Lgithub.com/streadway/amqp.Delivery.Ack    /   type."".Transfer   ²/
-  "runtime.newobject   ª0  "type.*"".Transfer   è0
-  .encoding/json.Unmarshal   2
-  2runtime.slicebytetostring   Š3       ğ4  type.string   ®5
-  runtime.convT2E   „6 6runtime.writeBarrierEnabled   ¨6  type.string   æ6
-  runtime.convT2E   Ä7 6runtime.writeBarrierEnabled   è7  jgo.string."received a dirty transfer request '%s' %s"   Ú8
-  fmt.Errorf   ²:
-  runtime.convI2E   ˆ; 6runtime.writeBarrierEnabled   ì;
-  log.Println   Œ<
-ô  runtime.duffcopy   ¦<
-  Rgithub.com/streadway/amqp.Delivery.Reject   Ô<
-  .runtime.writebarrierptr   Š=
-  .runtime.writebarrierptr   ¸=
-  .runtime.writebarrierptr   œ> "".hostname   Æ>  "".hostname   Ş> "".hostname   ò>
-   runtime.eqstring   œ?  Xgo.string."received a file transfer request"   ú@  type.string   ¸A
-  runtime.convT2E   B 6runtime.writeBarrierEnabled   ²B  type.string   üB
-  runtime.convT2E   ÚC 6runtime.writeBarrierEnabled   ¾D
-  log.Println   âD
-Ø  runtime.duffcopy   ˜E  ("".HandleTransferÂ·f   ¬E
-  runtime.newproc   ÚE
-  .runtime.writebarrierptr   ‚F
-  .runtime.writebarrierptr   ¨F  Rgo.string."no longer consuming transfers"   æG  type.string   ¤H
-  runtime.convT2E   úH 6runtime.writeBarrierEnabled   ŞI
-  log.Println   ’J
-  .runtime.writebarrierptr   ÈJ
-  .runtime.writebarrierptr   „K
-  .runtime.writebarrierptr   ¦K
-  0runtime.morestack_noctxt      Œ"".autotmp_0342  "type.interface {} "".autotmp_0341 ß(type.[1]interface {} "".autotmp_0339  *type.*[1]interface {} "".autotmp_0338  &type.[]interface {} "".autotmp_0337  "type.interface {} "".autotmp_0336  "type.interface {} "".autotmp_0335 Ï(type.[2]interface {} "".autotmp_0333  *type.*[2]interface {} "".autotmp_0332  &type.[]interface {} "".autotmp_0331  type.string "".autotmp_0330  "type.interface {} "".autotmp_0329 ¿(type.[1]interface {} "".autotmp_0327  *type.*[1]interface {} "".autotmp_0326  &type.[]interface {} "".autotmp_0325  "type.interface {} "".autotmp_0324  "type.interface {} "".autotmp_0323 (type.[2]interface {} "".autotmp_0320  &type.[]interface {} "".autotmp_0318 ÏNtype.github.com/streadway/amqp.Delivery "".autotmp_0317  "type.interface {} "".autotmp_0316  (type.[1]interface {} "".autotmp_0314  *type.*[1]interface {} "".autotmp_0313  &type.[]interface {} "".autotmp_0312  "type.interface {} "".autotmp_0311  (type.[1]interface {} "".autotmp_0309  *type.*[1]interface {} "".autotmp_0308  &type.[]interface {} "".autotmp_0307  "type.interface {} "".autotmp_0306  (type.[1]interface {} "".autotmp_0304  *type.*[1]interface {} "".autotmp_0303  &type.[]interface {} "".autotmp_0302  "type.interface {} "".autotmp_0301  (type.[1]interface {} "".autotmp_0299  *type.*[1]interface {} "".autotmp_0298  &type.[]interface {} "".autotmp_0297  "type.interface {} "".autotmp_0296 Ÿ(type.[1]interface {} "".autotmp_0294  *type.*[1]interface {} "".autotmp_0293  &type.[]interface {} "".autotmp_0292  "type.interface {} "".autotmp_0291  (type.[1]interface {} "".autotmp_0289  *type.*[1]interface {} "".autotmp_0288  &type.[]interface {} "".autotmp_0287 ÿ"type.interface {} "".autotmp_0286 ß(type.[1]interface {} "".autotmp_0283 ¿&type.[]interface {} "".autotmp_0282  type.string "".autotmp_0281  type.string "".autotmp_0280  type.error "".autotmp_0279 ¿type.string "".autotmp_0278  type.string "".autotmp_0276 ï	\type.<-chan github.com/streadway/amqp.Delivery "".autotmp_0275  type.string "".autotmp_0274  type.error "".autotmp_0273  type.string "".autotmp_0272  type.error "".autotmp_0271  type.string "".autotmp_0270  type.error "".autotmp_0269  type.error "".autotmp_0268 Ÿtype.string "".autotmp_0267 ÿtype.string "".autotmp_0266 ßtype.error "".&msg Ï	Ptype.*github.com/streadway/amqp.Delivery "".&transfer ß	"type.*"".Transfer "".err ÿtype.error "".msgs 
-\type.<-chan github.com/streadway/amqp.Delivery "".err Ÿ	type.error "".queue Htype.github.com/streadway/amqp.Queue "".err ¿	type.error "".channel ÿ	Ntype.*github.com/streadway/amqp.Channel "Ø$e à% ¸,A	SªéHFæª:æUææ¤z
-P
-_Ø72â#U Ú A\vvVuv·vVgvvV41	vVa¿vV‘
-aZÂ[7‘Öl]	£
-Ã7¥] TgclocalsÂ·b00577bc5fafaaa1d611f379d0098096 TgclocalsÂ·817efdc4b7ae7892041dd796e2df2438   ’/Users/bjones/projects/unison/src/github.com/blockloop/unison/transfer.goş""".HandleTransfer  À
-  À
-eH‹%    H„$pÿÿÿH;A†{  Hì  H‹œ$  H‰œ$à   H‹œ$   H‰œ$è   H‹œ$(  H‰œ$ğ   H‹œ$0  H‰œ$ø   H‹œ$8  H‰œ$   H‹œ$@  H‰œ$  H    H‰$Hœ$à   H‰\$HÇD$    è    H\$H‹H‰$H‹KH‰L$1ÛH‰\$H‰\$H    H‰\$ HÇD$(   è    H‹T$0H‹L$8H‹D$@H    H‰\$hHÇD$p
-   H‰T$xH‰”$¨   H‰Œ$€   H‰Œ$°   H‰„$ˆ   H‰„$¸   1ÛH‰œ$À   H‰œ$È   H‰œ$Ğ   H‰œ$Ø   Hœ$À   Hƒû „'  HÇ„$˜      HÇ„$       H‰œ$   H    H‰$H\$hH‰\$HÇD$    è    H‹L$H‹D$ H‹œ$   H‰L$XH‰H‰D$`€=     …¡   H‰CH    H‰$Hœ$¨   H‰\$HÇD$    è    H‹L$H‹D$ H‹œ$   HƒÃH‰L$XH‰H‰D$`€=     u7H‰CH‹œ$   H‰$H‹œ$˜   H‰\$H‹œ$    H‰\$è    HÄ  ÃLCL‰$H‰D$è    ë¹LCL‰$H‰D$è    éLÿÿÿ‰éÒşÿÿè    é`ıÿÿ 
-      Š   type."".Transfer   È
-  runtime.convT2E   ˜  go.string."  "   ¾
-  6encoding/json.MarshalIndent   ê  ,go.string."would log:"   –  type.string   Î
-  runtime.convT2E   ˜ 6runtime.writeBarrierEnabled   ¼  type.[]uint8   ú
-  runtime.convT2E   Ì 6runtime.writeBarrierEnabled   °	
-  log.Println   ä	
-  .runtime.writebarrierptr   Œ
-
-  .runtime.writebarrierptr   ®
-
-  0runtime.morestack_noctxt   p   "".autotmp_0353  "type.interface {} "".autotmp_0352 ï"type.interface {} "".autotmp_0351 Ÿ(type.[2]interface {} "".autotmp_0348 ÿ&type.[]interface {} "".autotmp_0347 Ïtype.[]uint8 "".autotmp_0346 Ïtype.string "".autotmp_0345 _ type."".Transfer "".str ¯type.[]uint8 "".msg `Ptype.*github.com/streadway/amqp.Delivery "".t   type."".Transfer " ÁŸ <    Ì"Ğê2
-  £ƒ±/ TgclocalsÂ·c4b85d0461092430bad976788ad812ae TgclocalsÂ·f50414c3b817780058cdf3a15c048db6   ’/Users/bjones/projects/unison/src/github.com/blockloop/unison/transfer.goş"".readFile  €  ğeH‹%    HD$øH;A†–  Hìˆ   HÇD$8    H    H‰$HÇD$   HÇD$   è    H‹T$H‹L$ H‹D$(H‹œ$   H‰$H‰T$XH‰T$H‰L$`H‰L$H‰D$hH‰D$è    H‹L$ H‰L$@H‹D$(H‹T$0H‰T$PH‰D$HHƒø tSH‹-    H9è…È   H‰$H‰T$H‹-    H‰l$H‹-    H‰l$è    H‹T$PH‹L$@H‹D$H¶\$ €û „…   Hƒù uH‹œ$˜   H‰$è    HÄˆ   ÃH‹l$hH9éwUL‹D$XH‰L$xH‰¬$€   L‰D$pH    H‰$H‹œ$˜   H‰\$H\$pH‰\$è    H‹\$8H‹l$@HëH‰\$8é«şÿÿè    H‰$H‰T$è    H\$H‹H‰$H‹KH‰L$è    è    éHşÿÿ
-      V  type.[]uint8   Œ
-  "runtime.makeslice   ˆ
-  os.(*File).Read   Ş  io.EOF     io.EOF   ¨ io.EOF   ¼
-  runtime.ifaceeq   ¤
-  "runtime.closechan   „  "type.chan []uint8   Ä
-  "runtime.chansend1   ü
-  $runtime.panicslice   œ
-  runtime.convI2E   Ğ
-  runtime.gopanic   Ş
-  0runtime.morestack_noctxt      "".autotmp_0354 /type.[]uint8 "".err type.error "".n type.int "".buffer _type.[]uint8 "".off Ÿtype.int 
-"".ch "type.chan []uint8 "".file  type.*os.File ş¢ À <Ö	1H^H	*  E>Z4PC TgclocalsÂ·6412d3717715814cae1af4eeac4eb5d3 TgclocalsÂ·1cf7ad360f2a55de01d7c3de31136070   ’/Users/bjones/projects/unison/src/github.com/blockloop/unison/transfer.goş4"".WatchLocalChanges.func1  À  ÀeH‹%    H„$8ÿÿÿH;A†»  HìH  1ÀH‰„$˜   H‰„$    H‰„$¨   H‰„$°   H‹œ$P  H‹«ˆ   H‰l$8HÇD$0    H‹œ$P  H‹kxH‰l$(1ÛH‰\$pH‰\$xH¼$¸   1ÀHƒÇğè    Hœ$¸   H‰$HÇD$   ÇD$   è    H¬$¸   H‰,$H‹l$8H‰l$Hl$0H‰l$è    ¶\$€û t4H‹D$0‹ƒãƒû”Á€ù …IÿÿÿH‹œ$X  H‰$H‰D$è    é.ÿÿÿH¬$¸   H‰,$H‹l$(H‰l$Hl$pH‰l$è    ¶\$€û „z  H‹\$pH‰\$@H‹\$xH‰\$HH    H‰\$`HÇD$h   1ÛH‰œ$˜   H‰œ$    H‰œ$¨   H‰œ$°   Hœ$˜   Hƒû „  HÇ„$ˆ      HÇ„$      H‰œ$€   H    H‰$H\$`H‰\$HÇD$    è    H‹L$H‹D$ H‹œ$€   H‰L$PH‰H‰D$X€=     …   H‰CH‹\$@H‰$H‹\$HH‰\$è    H‹L$H‹D$H‹œ$€   HƒÃH‰L$PH‰H‰D$X€=     u4H‰CH‹œ$€   H‰$H‹œ$ˆ   H‰\$H‹œ$   H‰\$è    é³ıÿÿLCL‰$H‰D$è    ë¼LCL‰$H‰D$è    é]ÿÿÿ‰éãşÿÿHœ$¸   H‰$è    è    é ıÿÿ"
-      š
-  runtime.duffzero   Ş
-  "runtime.newselect   ¨
-  $runtime.selectrecv   š
-  "".handleChange   î
-  $runtime.selectrecv   À  :go.string."PUBLISHER: error:"   ’  type.string   Ê
-  runtime.convT2E   ” 6runtime.writeBarrierEnabled   Ú
-  runtime.convI2E   ¬	 6runtime.writeBarrierEnabled   
-
-  log.Println   ¾
-
-  .runtime.writebarrierptr   æ
-
-  .runtime.writebarrierptr    
-   runtime.selectgo   ®
-  0runtime.morestack_noctxt      "".autotmp_0367  "type.interface {} "".autotmp_0366 ï"type.interface {} "".autotmp_0365 ß(type.[2]interface {} "".autotmp_0362 &type.[]interface {} "".autotmp_0360 Ÿìtype.struct { tcase uint16; ncase uint16; pollorder *uint8; lockorder *uint8; scase [2]struct { elem *uint8; chan *uint8; pc uintptr; kind uint16; so uint16; receivedp *uint8; releasetime uint64 }; lockorderarr [2]*uint8; pollorderarr [2]uint16 } "".autotmp_0359 Ïtype.string "".autotmp_0358 ¯type.error "".autotmp_0357 ¿type.chan error "".autotmp_0356 ¯Ttype.*github.com/howeyc/fsnotify.FileEvent "".autotmp_0355 Ÿ^type.chan *github.com/howeyc/fsnotify.FileEvent "".err type.error "".channel Ntype.*github.com/streadway/amqp.Channel "".watcher  Ptype.*github.com/howeyc/fsnotify.Watcher "¾ à <ND
-54
-G¯2
- 2 ®%9*®H[ TgclocalsÂ·4eec13d660d4aef174c5282005c43690 TgclocalsÂ·50005c481d8efd657209096e5cc8cb0f   /Users/bjones/projects/unison/src/github.com/blockloop/unison/locals.goş"".init  €  şeH‹%    H;a†â   Hƒì(¶    €û t¶    €ûuHƒÄ(Ãè    Æ    è    è    è    è    è    è    è    è    è    è    è    è    è    è    H    H‰$HÇD$    HÇD$    HÇD$    è    H‹\$ €=     uH‰    è    è    Æ    HƒÄ(ÃH-    H‰,$H‰\$è    ëÓè    éÿÿÿ:
-      4  "".initdoneÂ·   L  "".initdoneÂ·   j
-  "runtime.throwinit   z "".initdoneÂ·   †
-  $encoding/json.init   
-  fmt.init   š
-  log.init   ¤
-  os.init   ®
-  $path/filepath.init   ¸
-  strconv.init   Â
-  time.init   Ì
-  Dgithub.com/blockloop/unison/q.init   Ö
-  <github.com/streadway/amqp.init   à
-  crypto/md5.init   ê
-  io.init   ô
-  math.init   ş
-  >github.com/howeyc/fsnotify.init   ˆ
-  sync.init   –  2type.map[string]chan bool   Ş
-  runtime.makemap   ô 6runtime.writeBarrierEnabled   ˆ  "".locks   ’
-  "".init.1   œ
-  "".init.2   ¨ "".initdoneÂ·   Â  "".locks   Ş
-  .runtime.writebarrierptr   ì
-  0runtime.morestack_noctxt    P   POP©OP" ˆ@ "ôˆİ@ŞİŞ  4Ì TgclocalsÂ·33cdeccccebe80329f1fdbee7f5874cb TgclocalsÂ·33cdeccccebe80329f1fdbee7f5874cb   ’/Users/bjones/projects/unison/src/github.com/blockloop/unison/transfer.goŠ/Users/bjones/projects/unison/src/github.com/blockloop/unison/sync.goş4type..hash.[1]interface {} à  ÊeH‹%    H;a†ˆ   Hƒì(H‹L$81ÀHÇD$   H‹l$H9è}\H‰D$ H‰ÅH‰ÈHÁÀH»¿c»kïR H¯ØH‰ØH‹\$0Hƒû t;HÁåHëH‰$H‰D$8H‰D$è    H‹L$H‹D$ HÿÀH‹l$H9è|¤H‰L$@HƒÄ(Ã‰ëÁè    é[ÿÿÿ
-      ä
-  (runtime.nilinterhash   ¸
-  0runtime.morestack_noctxt   0P  
-"".autotmp_0371 type.int "".autotmp_0370 type.int "".~r2  type.uintptr "".h type.uintptr "".p  *type.*[1]interface {} POP ° ° 
- q? TgclocalsÂ·0b86ef39f3fed835f14ba5f4d7c62fa2 TgclocalsÂ·33cdeccccebe80329f1fdbee7f5874cb   /Users/bjones/projects/unison/src/github.com/blockloop/unison/changes.goş0type..eq.[1]interface {} à  ÖeH‹%    H;a†Î   HƒìX1ÀHÇD$(   H‹l$(H9è’   H‰D$0H‹\$hHƒû „–   H‰ÅHÁåHëH‹H‹sH‹\$`Hƒû tvH‰ÅHÁåHëH‹H‹SH9ÈuVH‰D$8H‰$H‰T$@H‰T$H‰L$HH‰L$H‰t$PH‰t$è    ¶\$ €û t H‹D$0HÿÀH‹l$(H9èŒnÿÿÿÆD$pHƒÄXÃÆD$p HƒÄXÃ‰ë†‰écÿÿÿè    éÿÿÿ
-      ¼
-  runtime.efaceeq   Ä
-  0runtime.morestack_noctxt   0°  "".autotmp_0375 ?"type.interface {} "".autotmp_0374 "type.interface {} "".autotmp_0373 _type.int "".autotmp_0372 Otype.int "".~r2  type.bool "".q *type.*[1]interface {} "".p  *type.*[1]interface {} &°´¯°	¯° ğ ğ  S TgclocalsÂ·3bb21ca8fe1d99a3e492463bd711418a TgclocalsÂ·a8eabfc4a4514ed6b3b0c61e9680e440   /Users/bjones/projects/unison/src/github.com/blockloop/unison/changes.goş4type..hash.[3]interface {} à  ÊeH‹%    H;a†ˆ   Hƒì(H‹L$81ÀHÇD$   H‹l$H9è}\H‰D$ H‰ÅH‰ÈHÁÀH»¿c»kïR H¯ØH‰ØH‹\$0Hƒû t;HÁåHëH‰$H‰D$8H‰D$è    H‹L$H‹D$ HÿÀH‹l$H9è|¤H‰L$@HƒÄ(Ã‰ëÁè    é[ÿÿÿ
-      ä
-  (runtime.nilinterhash   ¸
-  0runtime.morestack_noctxt   0P  
-"".autotmp_0377 type.int "".autotmp_0376 type.int "".~r2  type.uintptr "".h type.uintptr "".p  *type.*[3]interface {} POP ° ° 
- q? TgclocalsÂ·0b86ef39f3fed835f14ba5f4d7c62fa2 TgclocalsÂ·33cdeccccebe80329f1fdbee7f5874cb   /Users/bjones/projects/unison/src/github.com/blockloop/unison/changes.goş0type..eq.[3]interface {} à  ÖeH‹%    H;a†Î   HƒìX1ÀHÇD$(   H‹l$(H9è’   H‰D$0H‹\$hHƒû „–   H‰ÅHÁåHëH‹H‹sH‹\$`Hƒû tvH‰ÅHÁåHëH‹H‹SH9ÈuVH‰D$8H‰$H‰T$@H‰T$H‰L$HH‰L$H‰t$PH‰t$è    ¶\$ €û t H‹D$0HÿÀH‹l$(H9èŒnÿÿÿÆD$pHƒÄXÃÆD$p HƒÄXÃ‰ë†‰écÿÿÿè    éÿÿÿ
-      ¼
-  runtime.efaceeq   Ä
-  0runtime.morestack_noctxt   0°  "".autotmp_0381 ?"type.interface {} "".autotmp_0380 "type.interface {} "".autotmp_0379 _type.int "".autotmp_0378 Otype.int "".~r2  type.bool "".q *type.*[3]interface {} "".p  *type.*[3]interface {} &°´¯°	¯° ğ ğ  S TgclocalsÂ·3bb21ca8fe1d99a3e492463bd711418a TgclocalsÂ·a8eabfc4a4514ed6b3b0c61e9680e440   /Users/bjones/projects/unison/src/github.com/blockloop/unison/changes.goş,type..hash."".Transfer    †eH‹%    H;a†¦   HƒìH‹\$ H‰$Hƒ<$ „‚   H‹\$(H‰\$è    H‹D$H‹\$ H‰$Hƒ<$ tUHƒ$H‰D$(H‰D$è    H‹D$H‹\$ H‰$Hƒ<$ t#Hƒ$ H‰D$(H‰D$è    H‹\$H‰\$0HƒÄÃ‰%    ëÔ‰%    ë¢‰%    érÿÿÿè    é=ÿÿÿ
-
-      l
-  runtime.strhash   ¾
-  runtime.strhash   
-  runtime.strhash   ô
-  0runtime.morestack_noctxt   00  "".~r2  type.uintptr "".h type.uintptr "".p  "type.*"".Transfer 0ƒ/05 Ğ Ğ  5› TgclocalsÂ·0b86ef39f3fed835f14ba5f4d7c62fa2 TgclocalsÂ·33cdeccccebe80329f1fdbee7f5874cb   /Users/bjones/projects/unison/src/github.com/blockloop/unison/changes.goş(type..eq."".Transfer à  ÔeH‹%    H;a†  HƒìHH‹\$PHƒû „s  H‹3H‹KH‹\$XHƒû „V  H‹H‹CH9Á…<  H‰t$8H‰4$H‰L$@H‰L$H‰T$(H‰T$H‰D$0H‰D$è    ¶\$ €û „  H‹\$PHƒû „ì   H‹SH‹CH‹\$XHƒû „Î   H‹sH‹KH9È…³   H‰T$(H‰$H‰D$0H‰D$H‰t$8H‰t$H‰L$@H‰L$è    ¶\$ €û t}H‹\$PHƒû tnH‹s H‹K(H‹\$XHƒû tWH‹S H‹C(H9Áu@H‰t$8H‰4$H‰L$@H‰L$H‰T$(H‰T$H‰D$0H‰D$è    ¶\$ €û t
-ÆD$`HƒÄHÃÆD$` HƒÄHÃ‰ë¥‰ëÆD$` HƒÄHÃ‰é+ÿÿÿ‰éÿÿÿÆD$` HƒÄHÃ‰é£şÿÿ‰é†şÿÿè    éVşÿÿ
-
-      è
-   runtime.eqstring   Ê
-   runtime.eqstring   Œ
-   runtime.eqstring   Â
-  0runtime.morestack_noctxt   0  "".autotmp_0387  type.string "".autotmp_0386  type.string "".autotmp_0385  type.string "".autotmp_0384  type.string "".autotmp_0383 ?type.string "".autotmp_0382 type.string "".~r2  type.bool "".q "type.*"".Transfer "".p  "type.*"".Transfer >Æ	 ° °  s½ TgclocalsÂ·3bb21ca8fe1d99a3e492463bd711418a TgclocalsÂ·a8eabfc4a4514ed6b3b0c61e9680e440   /Users/bjones/projects/unison/src/github.com/blockloop/unison/changes.goş(type..hash."".Change €  üeH‹%    H;a†!  Hƒì H‹\$(H‰$Hƒ<$ „ı   H‹\$0H‰\$è    H‹D$H‹\$(H‰$Hƒ<$ „É   Hƒ$H‰D$0H‰D$è    H‹D$H‹\$(H‰$Hƒ<$ „   Hƒ$ H‰D$0H‰D$è    H‹D$H‹\$(H‰$Hƒ<$ t^Hƒ$8H‰D$0H‰D$HÇD$   è    H‹D$H‹\$(H‰$Hƒ<$ t#Hƒ$@H‰D$0H‰D$è    H‹\$H‰\$8HƒÄ Ã‰%    ëÔ‰%    ë™‰%    édÿÿÿ‰%    é+ÿÿÿ‰%    é÷şÿÿè    éÂşÿÿ
-      l
-  runtime.strhash   Æ
-  runtime.strhash    
-  (type..hash.time.Time   „
-  runtime.memhash   Ö
-  runtime.strhash   ê
-  0runtime.morestack_noctxt   0@  "".~r2  type.uintptr "".h type.uintptr "".p  type.*"".Change @æ?@B À À  5‹ TgclocalsÂ·0b86ef39f3fed835f14ba5f4d7c62fa2 TgclocalsÂ·33cdeccccebe80329f1fdbee7f5874cb   /Users/bjones/projects/unison/src/github.com/blockloop/unison/changes.goş$type..eq."".Change €
-  ø	eH‹%    H;a†_  HƒìHH‹\$PHƒû „E  H‹3H‹KH‹\$XHƒû „(  H‹H‹CH9Á…  H‰t$8H‰4$H‰L$@H‰L$H‰T$(H‰T$H‰D$0H‰D$è    ¶\$ €û „Ô  H‹\$PHƒû „¾  H‹SH‹CH‹\$XHƒû „   H‹sH‹KH9È……  H‰T$(H‰$H‰D$0H‰D$H‰t$8H‰t$H‰L$@H‰L$è    H‹t$PH‹T$X¶\$ €û „A  H‰ñHƒş „-  HƒÁ H‰ĞHƒú „  HƒÀ H‹H‹(H9ë…ø   ‹Y‹h9ë…ê   H‹YH‹hH9ë…Ù   H‰4$Hƒ<$ „¾   Hƒ$8H‰T$Hƒ|$ „œ   HƒD$8è    ¶\$€û u
-ÆD$` HƒÄHÃH‹\$PHƒû tnH‹s@H‹KHH‹\$XHƒû tWH‹S@H‹CHH9Áu@H‰t$8H‰4$H‰L$@H‰L$H‰T$(H‰T$H‰D$0H‰D$è    ¶\$ €û t
-ÆD$`HƒÄHÃÆD$` HƒÄHÃ‰ë¥‰ë‰%    éXÿÿÿ‰%    é6ÿÿÿÆD$` HƒÄHÃ‰éäşÿÿ‰éÌşÿÿÆD$` HƒÄHÃ‰éYşÿÿ‰é;şÿÿÆD$` HƒÄHÃ‰éÑıÿÿ‰é´ıÿÿè    é„ıÿÿ
-      è
-   runtime.eqstring   Ê
-   runtime.eqstring   ú
-  $runtime.memequal32   Ğ
-   runtime.eqstring   æ	
-  0runtime.morestack_noctxt   0  "".autotmp_0396  type.string "".autotmp_0395  type.string "".autotmp_0392  type.string "".autotmp_0391  type.string "".autotmp_0390 ?type.string "".autotmp_0389 type.string "".~r2  type.bool "".q type.*"".Change "".p  type.*"".Change Vıj	) € €  s TgclocalsÂ·3bb21ca8fe1d99a3e492463bd711418a TgclocalsÂ·a8eabfc4a4514ed6b3b0c61e9680e440   /Users/bjones/projects/unison/src/github.com/blockloop/unison/changes.goş4type..hash.[2]interface {} à  ÊeH‹%    H;a†ˆ   Hƒì(H‹L$81ÀHÇD$   H‹l$H9è}\H‰D$ H‰ÅH‰ÈHÁÀH»¿c»kïR H¯ØH‰ØH‹\$0Hƒû t;HÁåHëH‰$H‰D$8H‰D$è    H‹L$H‹D$ HÿÀH‹l$H9è|¤H‰L$@HƒÄ(Ã‰ëÁè    é[ÿÿÿ
-      ä
-  (runtime.nilinterhash   ¸
-  0runtime.morestack_noctxt   0P  
-"".autotmp_0398 type.int "".autotmp_0397 type.int "".~r2  type.uintptr "".h type.uintptr "".p  *type.*[2]interface {} POP ° ° 
- q? TgclocalsÂ·0b86ef39f3fed835f14ba5f4d7c62fa2 TgclocalsÂ·33cdeccccebe80329f1fdbee7f5874cb   /Users/bjones/projects/unison/src/github.com/blockloop/unison/changes.goş0type..eq.[2]interface {} à  ÖeH‹%    H;a†Î   HƒìX1ÀHÇD$(   H‹l$(H9è’   H‰D$0H‹\$hHƒû „–   H‰ÅHÁåHëH‹H‹sH‹\$`Hƒû tvH‰ÅHÁåHëH‹H‹SH9ÈuVH‰D$8H‰$H‰T$@H‰T$H‰L$HH‰L$H‰t$PH‰t$è    ¶\$ €û t H‹D$0HÿÀH‹l$(H9èŒnÿÿÿÆD$pHƒÄXÃÆD$p HƒÄXÃ‰ë†‰écÿÿÿè    éÿÿÿ
-      ¼
-  runtime.efaceeq   Ä
-  0runtime.morestack_noctxt   0°  "".autotmp_0402 ?"type.interface {} "".autotmp_0401 "type.interface {} "".autotmp_0400 _type.int "".autotmp_0399 Otype.int "".~r2  type.bool "".q *type.*[2]interface {} "".p  *type.*[2]interface {} &°´¯°	¯° ğ ğ  S TgclocalsÂ·3bb21ca8fe1d99a3e492463bd711418a TgclocalsÂ·a8eabfc4a4514ed6b3b0c61e9680e440   /Users/bjones/projects/unison/src/github.com/blockloop/unison/changes.goş(type..hash.[2]string à  ÊeH‹%    H;a†ˆ   Hƒì(H‹L$81ÀHÇD$   H‹l$H9è}\H‰D$ H‰ÅH‰ÈHÁÀH»¿c»kïR H¯ØH‰ØH‹\$0Hƒû t;HÁåHëH‰$H‰D$8H‰D$è    H‹L$H‹D$ HÿÀH‹l$H9è|¤H‰L$@HƒÄ(Ã‰ëÁè    é[ÿÿÿ
-      ä
-  runtime.strhash   ¸
-  0runtime.morestack_noctxt   0P  
-"".autotmp_0404 type.int "".autotmp_0403 type.int "".~r2  type.uintptr "".h type.uintptr "".p  type.*[2]string POP ° ° 
- q? TgclocalsÂ·0b86ef39f3fed835f14ba5f4d7c62fa2 TgclocalsÂ·33cdeccccebe80329f1fdbee7f5874cb   /Users/bjones/projects/unison/src/github.com/blockloop/unison/changes.goş$type..eq.[2]string à  ÖeH‹%    H;a†Î   HƒìX1ÀHÇD$(   H‹l$(H9è’   H‰D$0H‹\$`Hƒû „–   H‰ÅHÁåHëH‹3H‹KH‹\$hHƒû tvH‰ÅHÁåHëH‹H‹CH9ÁuVH‰t$HH‰4$H‰L$PH‰L$H‰T$8H‰T$H‰D$@H‰D$è    ¶\$ €û t H‹D$0HÿÀH‹l$(H9èŒnÿÿÿÆD$pHƒÄXÃÆD$p HƒÄXÃ‰ë†‰écÿÿÿè    éÿÿÿ
-      ¼
-   runtime.eqstring   Ä
-  0runtime.morestack_noctxt   0°  "".autotmp_0408 ?type.string "".autotmp_0407 type.string "".autotmp_0406 _type.int "".autotmp_0405 Otype.int "".~r2  type.bool "".q type.*[2]string "".p  type.*[2]string &°´¯°	¯° ğ ğ  S TgclocalsÂ·3bb21ca8fe1d99a3e492463bd711418a TgclocalsÂ·a8eabfc4a4514ed6b3b0c61e9680e440   /Users/bjones/projects/unison/src/github.com/blockloop/unison/changes.goş(type..hash.[8]string à  ÊeH‹%    H;a†ˆ   Hƒì(H‹L$81ÀHÇD$   H‹l$H9è}\H‰D$ H‰ÅH‰ÈHÁÀH»¿c»kïR H¯ØH‰ØH‹\$0Hƒû t;HÁåHëH‰$H‰D$8H‰D$è    H‹L$H‹D$ HÿÀH‹l$H9è|¤H‰L$@HƒÄ(Ã‰ëÁè    é[ÿÿÿ
-      ä
-  runtime.strhash   ¸
-  0runtime.morestack_noctxt   0P  
-"".autotmp_0410 type.int "".autotmp_0409 type.int "".~r2  type.uintptr "".h type.uintptr "".p  type.*[8]string POP ° ° 
- q? TgclocalsÂ·0b86ef39f3fed835f14ba5f4d7c62fa2 TgclocalsÂ·33cdeccccebe80329f1fdbee7f5874cb   /Users/bjones/projects/unison/src/github.com/blockloop/unison/changes.goş$type..eq.[8]string à  ÖeH‹%    H;a†Î   HƒìX1ÀHÇD$(   H‹l$(H9è’   H‰D$0H‹\$`Hƒû „–   H‰ÅHÁåHëH‹3H‹KH‹\$hHƒû tvH‰ÅHÁåHëH‹H‹CH9ÁuVH‰t$HH‰4$H‰L$PH‰L$H‰T$8H‰T$H‰D$@H‰D$è    ¶\$ €û t H‹D$0HÿÀH‹l$(H9èŒnÿÿÿÆD$pHƒÄXÃÆD$p HƒÄXÃ‰ë†‰écÿÿÿè    éÿÿÿ
-      ¼
-   runtime.eqstring   Ä
-  0runtime.morestack_noctxt   0°  "".autotmp_0414 ?type.string "".autotmp_0413 type.string "".autotmp_0412 _type.int "".autotmp_0411 Otype.int "".~r2  type.bool "".q type.*[8]string "".p  type.*[8]string &°´¯°	¯° ğ ğ  S TgclocalsÂ·3bb21ca8fe1d99a3e492463bd711418a TgclocalsÂ·a8eabfc4a4514ed6b3b0c61e9680e440   /Users/bjones/projects/unison/src/github.com/blockloop/unison/changes.goşrgo.string.hdr."CONSUMER: got Channel, declaring Exchange"             )          jgo.string."CONSUMER: got Channel, declaring Exchange"   şjgo.string."CONSUMER: got Channel, declaring Exchange" `  TCONSUMER: got Channel, declaring Exchange  ş.go.string.hdr."changes"                       &go.string."changes"   ş&go.string."changes"   changes  ş,go.string.hdr."fanout"                       $go.string."fanout"   ş$go.string."fanout"   fanout  şHgo.string.hdr."Exchange Declare: %s"                       @go.string."Exchange Declare: %s"   ş@go.string."Exchange Declare: %s" 0  *Exchange Declare: %s  ş\go.string.hdr."CONSUMER: declaring Queue (%s)"                       Tgo.string."CONSUMER: declaring Queue (%s)"   şTgo.string."CONSUMER: declaring Queue (%s)" @  >CONSUMER: declaring Queue (%s)  şBgo.string.hdr."Queue Declare: %s"                       :go.string."Queue Declare: %s"   ş:go.string."Queue Declare: %s" 0  $Queue Declare: %s  şpgo.string.hdr."CONSUMER: binding to Exchange (key '%s')"             (          hgo.string."CONSUMER: binding to Exchange (key '%s')"   şhgo.string."CONSUMER: binding to Exchange (key '%s')" `  RCONSUMER: binding to Exchange (key '%s')  ş<go.string.hdr."Queue Bind: %s"                       4go.string."Queue Bind: %s"   ş4go.string."Queue Bind: %s"    Queue Bind: %s  ş†go.string.hdr."CONSUMER: Queue bound to Exchange, starting Consume"             3          ~go.string."CONSUMER: Queue bound to Exchange, starting Consume"   ş~go.string."CONSUMER: Queue bound to Exchange, starting Consume" p  hCONSUMER: Queue bound to Exchange, starting Consume  şBgo.string.hdr."Queue Consume: %s"                       :go.string."Queue Consume: %s"   ş:go.string."Queue Consume: %s" 0  $Queue Consume: %s  şTgclocalsÂ·adcd7923675ece97f29e7a815c5f5284             † †    ` `  a a  x x a†?a†?a?x?x?`? şTgclocalsÂ·e27b7e84a11c17d15d9903cbcdbcadf5           ş>go.string.hdr."requesting file"                       6go.string."requesting file"   ş6go.string."requesting file"     requesting file  ş@go.string.hdr."application/json"                       8go.string."application/json"   ş8go.string."application/json" 0  "application/json  ş:go.string.hdr."file-requests"                       2go.string."file-requests"   ş2go.string."file-requests"    file-requests  şTgclocalsÂ·724cf1e318dde77bf42fef93ad503fec     	   4            „À     À      À     À    0€À    0 À     Ä     Ä     şTgclocalsÂ·6e25916c194457f163fe7feace7d8c16 X  X	                                  şbgo.string.hdr."Failed to register a consumer: %s"             !          Zgo.string."Failed to register a consumer: %s"   şZgo.string."Failed to register a consumer: %s" P  DFailed to register a consumer: %s  şbgo.string.hdr."waiting for file to be transfered"             !          Zgo.string."waiting for file to be transfered"   şZgo.string."waiting for file to be transfered" P  Dwaiting for file to be transfered  şVgo.string.hdr."couldn't open local file %s"                       Ngo.string."couldn't open local file %s"   şNgo.string."couldn't open local file %s" @  8couldn't open local file %s  ş*go.string.hdr."Order"                       "go.string."Order"   ş"go.string."Order"   Order  şˆgo.string.hdr."no order was present in the header for file transfer"             4          €go.string."no order was present in the header for file transfer"   ş€go.string."no order was present in the header for file transfer" p  jno order was present in the header for file transfer  ş\go.string.hdr."writing chunk %d for file %s\n"                       Tgo.string."writing chunk %d for file %s\n"   şTgo.string."writing chunk %d for file %s\n" @  <writing chunk %d for file %s
-  şNgo.string.hdr."finished receiving file"                       Fgo.string."finished receiving file"   şFgo.string."finished receiving file" 0  0finished receiving file  şTgclocalsÂ·df2e73a019990ca45876cf1b4ab95c69 ğ  ğ   }                      xy           ˜xy           ˜ xy          ˜xy          ˜ xy          ˜xù         ˜ xù         !˜ xù         xù         ˜xù         ˜ xù         ˜ xù          ˜ xù         ˜ xù    /U¬B˜ xùz©b*     ˜ xùz©b*      ˜xù          ˜ƒù          ˜ƒ€ù          ˜€ù         ˜xù         ˜ xù          şTgclocalsÂ·2129bc453331251978f36c09e524adae È  È                                                                            şFgo.string.hdr."Could not unmarshal"                       >go.string."Could not unmarshal"   ş>go.string."Could not unmarshal" 0  (Could not unmarshal  şpgo.string.hdr."CONSUMER: handle: changes channel closed"             (          hgo.string."CONSUMER: handle: changes channel closed"   şhgo.string."CONSUMER: handle: changes channel closed" `  RCONSUMER: handle: changes channel closed  şTgclocalsÂ·9aa335a9c518fd294282b573e9d8d899 Ğ  Ğ   Y                    ğRÅ*T €—*V¡òRÅ*T €—*V¡òRÅ*T       ğRÅ*T      ğRÅ*T      ğRÅ*T      ğRÅ*T  şTgclocalsÂ·a9ea41aae9e32efcc8711d8fabe405fb P  P                               şdgo.string.hdr."file appears to be already deleted"             "          \go.string."file appears to be already deleted"   ş\go.string."file appears to be already deleted" P  Ffile appears to be already deleted  şNgo.string.hdr."local conflict for file"                       Fgo.string."local conflict for file"   şFgo.string."local conflict for file" 0  0local conflict for file  şVgo.string.hdr."could not delete local file"                       Ngo.string."could not delete local file"   şNgo.string."could not delete local file" @  8could not delete local file  şTgclocalsÂ·2d85f046b5afefe71b7c6075abc56243 Ğ  Ğ   3               
-       
-      
-   @   
-   P € ê  P   ê    
-   @ €à   @  à   P €à   P  à   şTgclocalsÂ·ba7cfad97585d573810c5f857a31c181 p  p                                           ş0Hgo.itab.*crypto/md5.digest.hash.Hash     şRgo.string.hdr."couldn't checksum file %s"                       Jgo.string."couldn't checksum file %s"   şJgo.string."couldn't checksum file %s" @  4couldn't checksum file %s  ş$go.string.hdr."%x"                       go.string."%x"   şgo.string."%x"   %x  şTgclocalsÂ·6255f76c3c5bfc98a680d045a618030f €  €                               Á   Á @ Á         şTgclocalsÂ·9b863115b01c0fc3e8579508c9300b2a €  €                                                 ş(go.string.hdr."HOME"                        go.string."HOME"   ş go.string."HOME"   
-HOME  ş,go.string.hdr."Unison"                       $go.string."Unison"   ş$go.string."Unison"   Unison  şTgclocalsÂ·5f572159a639a10c4a1aa53e8dfb92ea (  (   	       ¤        şTgclocalsÂ·7d2d5fca80364273fb07d5820a76fef4           şTgclocalsÂ·60c6a174b5e8c126140742cce4df8109 P  P                     0  0   şTgclocalsÂ·0ce64bbc7cfa5ef04d41c861de81a3d7           ş„go.string.hdr."PUBLISHER: got Channel, declaring %q Exchange (%q)"             2          |go.string."PUBLISHER: got Channel, declaring %q Exchange (%q)"   ş|go.string."PUBLISHER: got Channel, declaring %q Exchange (%q)" p  fPUBLISHER: got Channel, declaring %q Exchange (%q)  şXgo.string.hdr."PUBLISHER: declared Exchange"                       Pgo.string."PUBLISHER: declared Exchange"   şPgo.string."PUBLISHER: declared Exchange" @  :PUBLISHER: declared Exchange  şTgclocalsÂ·7890eacb3e918683b03c8c23c2a21742 8  8          Lå Lá à ä  şTgclocalsÂ·ea5138d814d46269fcb486a04203da7d 8  8                      şfgo.string.hdr."PUBLISHER: publishing %dB path (%q)"             #          ^go.string."PUBLISHER: publishing %dB path (%q)"   ş^go.string."PUBLISHER: publishing %dB path (%q)" P  HPUBLISHER: publishing %dB path (%q)  şNgo.string.hdr."ERROR marshaling msg %s"                       Fgo.string."ERROR marshaling msg %s"   şFgo.string."ERROR marshaling msg %s" 0  0ERROR marshaling msg %s  ş go.string.hdr.""                        go.string.""   şgo.string.""     şHgo.string.hdr."Exchange Publish: %s"                       @go.string."Exchange Publish: %s"   ş@go.string."Exchange Publish: %s" 0  *Exchange Publish: %s  şTgclocalsÂ·00debd00521aa39e570f6ba3b26820ec À  À   <                        È   À    À   À   LÀ   L À   L À    À    À     É     Á     Á/U¬  À   À È   À À     À    şTgclocalsÂ·9c1b3ea513cd4b324a63333b3bebd4a7 ¨  ¨                                                                şTgclocalsÂ·33cdeccccebe80329f1fdbee7f5874cb           şTgclocalsÂ·33cdeccccebe80329f1fdbee7f5874cb           şTgclocalsÂ·33cdeccccebe80329f1fdbee7f5874cb           şTgclocalsÂ·33cdeccccebe80329f1fdbee7f5874cb           şLgo.string.hdr."file is already locked"                       Dgo.string."file is already locked"   şDgo.string."file is already locked" 0  .file is already locked  şTgclocalsÂ·3bc4ed8845cba61334045b60262fa5c4 H  H              ¢È ¢À  À „       şTgclocalsÂ·c3853ac9a227a3992c4b717e278f354f H  H                            şTgclocalsÂ·23e8278e2b69a3a75fa59b23c49ed6ad              şTgclocalsÂ·0b86ef39f3fed835f14ba5f4d7c62fa2             şTgclocalsÂ·83ead081cd909acab0dcd88a450c1878                   şTgclocalsÂ·32bd5c6dc84e3e86dd35593b3922d3aa                  ş,go.string.hdr."%s: %s"                       $go.string."%s: %s"   ş$go.string."%s: %s"   %s: %s  şTgclocalsÂ·d535dad3d6ce50e9472d7bc4413e272d 0  0          P       şTgclocalsÂ·e9cc1e3ee2257b90864bd391efacf3e1 0  0                   ş0go.string.hdr."%s-files"                       (go.string."%s-files"   ş(go.string."%s-files"    %s-files  şXgo.string.hdr."Failed to declare a queue %s"                       Pgo.string."Failed to declare a queue %s"   şPgo.string."Failed to declare a queue %s" @  :Failed to declare a queue %s  şHgo.string.hdr."Failed to set QoS %s"                       @go.string."Failed to set QoS %s"   ş@go.string."Failed to set QoS %s" 0  *Failed to set QoS %s  ş`go.string.hdr."Failed to register a consumer %s"                        Xgo.string."Failed to register a consumer %s"   şXgo.string."Failed to register a consumer %s" P  BFailed to register a consumer %s  şdgo.string.hdr."awaiting file transfer requests..."             "          \go.string."awaiting file transfer requests..."   ş\go.string."awaiting file transfer requests..." P  Fawaiting file transfer requests...  şrgo.string.hdr."received a dirty transfer request '%s' %s"             )          jgo.string."received a dirty transfer request '%s' %s"   şjgo.string."received a dirty transfer request '%s' %s" `  Treceived a dirty transfer request '%s' %s  ş`go.string.hdr."received a file transfer request"                        Xgo.string."received a file transfer request"   şXgo.string."received a file transfer request" P  Breceived a file transfer request  şZgo.string.hdr."no longer consuming transfers"                       Rgo.string."no longer consuming transfers"   şRgo.string."no longer consuming transfers" @  <no longer consuming transfers  şTgclocalsÂ·817efdc4b7ae7892041dd796e2df2438 è  è   Q                `  ğ      `  ğ       ` ğ       ` ğ      ` ğ      ` ğ       à™ ğ       à™ ğ      ` ñ       à ğ       à ğ      à™ ğ      à™ ğ      à ğ      à ğÿRÅ*T  à ğÿRÅ*T  æ ğÿRÅ*T  à™ ğÿRÅ*T  à¹ ğÿRÅ*T  à¹ ğÿRÅ*T  à9 ğÿRÅ*T  à9 ğÿRÅ*T   ø9 ğÿRÅ*T   ø9 ğÿRÅ*T   şTgclocalsÂ·b00577bc5fafaaa1d611f379d0098096           ş$go.string.hdr."  "                       go.string."  "   şgo.string."  "       ş4go.string.hdr."would log:"             
-          ,go.string."would log:"   ş,go.string."would log:"    would log:  şTgclocalsÂ·f50414c3b817780058cdf3a15c048db6 0  0            * „ä ä  şTgclocalsÂ·c4b85d0461092430bad976788ad812ae 0  0      U   U   U   U    şTgclocalsÂ·1cf7ad360f2a55de01d7c3de31136070 0  0                     şTgclocalsÂ·6412d3717715814cae1af4eeac4eb5d3 0  0                   şBgo.string.hdr."PUBLISHER: error:"                       :go.string."PUBLISHER: error:"   ş:go.string."PUBLISHER: error:" 0  $PUBLISHER: error:  şTgclocalsÂ·50005c481d8efd657209096e5cc8cb0f €  €   $           Æ{š   Æ{š    À     ˜È     €È     €À      şTgclocalsÂ·4eec13d660d4aef174c5282005c43690 H  H                            şTgclocalsÂ·33cdeccccebe80329f1fdbee7f5874cb           şTgclocalsÂ·33cdeccccebe80329f1fdbee7f5874cb           ş."".rootDir   type.string   ş."".hostname   type.string   ş."".m   type.*sync.Mutex            """.statictmp_0368   ş."".locks  2type.map[string]chan bool   ş""".statictmp_0184  @type.[2]string @                                  $go.string."Unison"   ş""".statictmp_0231   Rtype.github.com/streadway/amqp.Publishing T                                          8go.string."application/json"   0  go.string.""   ş0""".statictmp_0368  type.sync.Mutex   ş0"".initdoneÂ·  type.uint8   ş,"".ListenForChangesÂ·f              &"".ListenForChanges   ş""".RequestFileÂ·f              "".RequestFile   ş""".WaitForFileÂ·f              "".WaitForFile   ş"".handleÂ·f              "".handle   ş$"".HandleChangeÂ·f              "".HandleChange   ş"".ChecksumÂ·f              "".Checksum   ş"".init.1Â·f              "".init.1   ş."".WatchLocalChangesÂ·f              ("".WatchLocalChanges   ş*"".declareExchangeÂ·f              $"".declareExchange   ş$"".handleChangeÂ·f              "".handleChange   ş"".init.2Â·f              "".init.2   ş"".mainÂ·f              "".main   ş"".LockFileÂ·f              "".LockFile   ş$"".FileIsLockedÂ·f              "".FileIsLocked   ş "".UnlockFileÂ·f              "".UnlockFile   ş""".failOnErrorÂ·f              "".failOnError   ş>"".ListenForTransferRequestsÂ·f              8"".ListenForTransferRequests   ş("".HandleTransferÂ·f              """.HandleTransfer   ş"".readFileÂ·f              "".readFile   ş:"".WatchLocalChanges.func1Â·f              4"".WatchLocalChanges.func1   ş"".initÂ·f              "".init   ş"runtime.gcbits.01    şHgo.string.hdr."<-chan amqp.Delivery"                       @go.string."<-chan amqp.Delivery"   ş@go.string."<-chan amqp.Delivery" 0  *<-chan amqp.Delivery  ş\type.<-chan github.com/streadway/amqp.Delivery °  °              q­İ 2                                                               0   runtime.algarray   @  "runtime.gcbits.01   P  Hgo.string.hdr."<-chan amqp.Delivery"   p  ngo.weak.type.*<-chan github.com/streadway/amqp.Delivery   €  "runtime.zerovalue     Ntype.github.com/streadway/amqp.Delivery   ş”go.typelink.<-chan amqp.Delivery	<-chan github.com/streadway/amqp.Delivery              \type.<-chan github.com/streadway/amqp.Delivery   ş"runtime.gcbits.03    ş8go.string.hdr."interface {}"                       0go.string."interface {}"   ş0go.string."interface {}"    interface {}  ş"type.interface {} À  À              çW                                                                          0€  runtime.algarray   @  "runtime.gcbits.03   P  8go.string.hdr."interface {}"   p  4go.weak.type.*interface {}   €  "runtime.zerovalue   À "type.interface {}   ş<go.string.hdr."[]interface {}"                       4go.string."[]interface {}"   ş4go.string."[]interface {}"    []interface {}  ş&type.[]interface {}                   p“ê/                                                         0   runtime.algarray   @  "runtime.gcbits.01   P  <go.string.hdr."[]interface {}"   p  8go.weak.type.*[]interface {}   €  "runtime.zerovalue     "type.interface {}   şRgo.typelink.[]interface {}	[]interface {}              &type.[]interface {}   şTgclocalsÂ·33cdeccccebe80329f1fdbee7f5874cb           şTgclocalsÂ·0b86ef39f3fed835f14ba5f4d7c62fa2             şTgclocalsÂ·a8eabfc4a4514ed6b3b0c61e9680e440              şTgclocalsÂ·3bb21ca8fe1d99a3e492463bd711418a             ş<type..hashfunc.[1]interface {}              4type..hash.[1]interface {}   ş8type..eqfunc.[1]interface {}              0type..eq.[1]interface {}   ş2type..alg.[1]interface {}                        <type..hashfunc.[1]interface {}     8type..eqfunc.[1]interface {}   ş>go.string.hdr."[1]interface {}"                       6go.string."[1]interface {}"   ş6go.string."[1]interface {}"     [1]interface {}  ş(type.[1]interface {} À  À              P‘[ú                                                                        0  2type..alg.[1]interface {}   @  "runtime.gcbits.03   P  >go.string.hdr."[1]interface {}"   p  :go.weak.type.*[1]interface {}   €  "runtime.zerovalue     "type.interface {}      &type.[]interface {}   şVgo.typelink.[1]interface {}	[1]interface {}              (type.[1]interface {}   ş@go.string.hdr."*[1]interface {}"                       8go.string."*[1]interface {}"   ş8go.string."*[1]interface {}" 0  "*[1]interface {}  ş*type.*[1]interface {}                   ¿¨5 6                                                        0   runtime.algarray   @  "runtime.gcbits.01   P  @go.string.hdr."*[1]interface {}"   p  <go.weak.type.**[1]interface {}   €  "runtime.zerovalue     (type.[1]interface {}   şTgclocalsÂ·33cdeccccebe80329f1fdbee7f5874cb           şTgclocalsÂ·0b86ef39f3fed835f14ba5f4d7c62fa2             şTgclocalsÂ·a8eabfc4a4514ed6b3b0c61e9680e440              şTgclocalsÂ·3bb21ca8fe1d99a3e492463bd711418a             ş<type..hashfunc.[3]interface {}              4type..hash.[3]interface {}   ş8type..eqfunc.[3]interface {}              0type..eq.[3]interface {}   ş2type..alg.[3]interface {}                        <type..hashfunc.[3]interface {}     8type..eqfunc.[3]interface {}   ş"runtime.gcbits.3f   ? ş>go.string.hdr."[3]interface {}"                       6go.string."[3]interface {}"   ş6go.string."[3]interface {}"     [3]interface {}  ş(type.[3]interface {} À  À0       0       İÏÙ                                                                        0  2type..alg.[3]interface {}   @  "runtime.gcbits.3f   P  >go.string.hdr."[3]interface {}"   p  :go.weak.type.*[3]interface {}   €  "runtime.zerovalue     "type.interface {}      &type.[]interface {}   şVgo.typelink.[3]interface {}	[3]interface {}              (type.[3]interface {}   ş@go.string.hdr."*[3]interface {}"                       8go.string."*[3]interface {}"   ş8go.string."*[3]interface {}" 0  "*[3]interface {}  ş*type.*[3]interface {}                   °ş¹ 6                                                        0   runtime.algarray   @  "runtime.gcbits.01   P  @go.string.hdr."*[3]interface {}"   p  <go.weak.type.**[3]interface {}   €  "runtime.zerovalue     (type.[3]interface {}   şTgclocalsÂ·33cdeccccebe80329f1fdbee7f5874cb           şTgclocalsÂ·0b86ef39f3fed835f14ba5f4d7c62fa2             şTgclocalsÂ·a8eabfc4a4514ed6b3b0c61e9680e440              şTgclocalsÂ·3bb21ca8fe1d99a3e492463bd711418a             ş4type..hashfunc."".Transfer              ,type..hash."".Transfer   ş0type..eqfunc."".Transfer              (type..eq."".Transfer   ş*type..alg."".Transfer                        4type..hashfunc."".Transfer     0type..eqfunc."".Transfer   ş<go.string.hdr."*main.Transfer"                       4go.string."*main.Transfer"   ş4go.string."*main.Transfer"    *main.Transfer  ş"type.*"".Transfer                    ÀåB) 6                                                        0   runtime.algarray   @  "runtime.gcbits.01   P  <go.string.hdr."*main.Transfer"   p  4go.weak.type.**"".Transfer   €  "runtime.zerovalue      type."".Transfer   ş"runtime.gcbits.15    ş:go.string.hdr."main.Transfer"                       2go.string."main.Transfer"   ş2go.string."main.Transfer"    main.Transfer  ş2go.string.hdr."Requestor"             	          *go.string."Requestor"   ş*go.string."Requestor"    Requestor  ş0go.string.hdr."Checksum"                       (go.string."Checksum"   ş(go.string."Checksum"    Checksum  ş(go.string.hdr."Path"                        go.string."Path"   ş go.string."Path"   
-Path  ş0go.string.hdr."Transfer"                       (go.string."Transfer"   ş(go.string."Transfer"    Transfer  şVgo.string.hdr."github.com/blockloop/unison"                       Ngo.string."github.com/blockloop/unison"   şNgo.string."github.com/blockloop/unison" @  8github.com/blockloop/unison  ş"go.importpath."".                       Ngo.string."github.com/blockloop/unison"   ş type."".Transfer  €  €0       (       }o}†                                                                                                                                                                                                                                       0  *type..alg."".Transfer   @  "runtime.gcbits.15   P  :go.string.hdr."main.Transfer"   p  "type.*"".Transfer   €  "runtime.zerovalue   À  type."".Transfer   À  2go.string.hdr."Requestor"   à  type.string     0go.string.hdr."Checksum"   °  type.string   à  (go.string.hdr."Path"   €  type.string   `°  type."".Transfer   °  0go.string.hdr."Transfer"   À  "go.importpath."".   Ğ€  type."".Transfer   şTgclocalsÂ·33cdeccccebe80329f1fdbee7f5874cb           şTgclocalsÂ·0b86ef39f3fed835f14ba5f4d7c62fa2             şTgclocalsÂ·a8eabfc4a4514ed6b3b0c61e9680e440              şTgclocalsÂ·3bb21ca8fe1d99a3e492463bd711418a             ş0type..hashfunc."".Change              (type..hash."".Change   ş,type..eqfunc."".Change              $type..eq."".Change   ş&type..alg."".Change                        0type..hashfunc."".Change     ,type..eqfunc."".Change   ş&runtime.gcbits.4501   E ş6go.string.hdr."main.Change"                       .go.string."main.Change"   ş.go.string."main.Change"    main.Change  ş,go.string.hdr."Source"                       $go.string."Source"   ş$go.string."Source"   Source  ş.go.string.hdr."ModDate"                       &go.string."ModDate"   ş&go.string."ModDate"   ModDate  ş0go.string.hdr."IsDelete"                       (go.string."IsDelete"   ş(go.string."IsDelete"    IsDelete  ş*go.string.hdr."IsMod"                       "go.string."IsMod"   ş"go.string."IsMod"   IsMod  ş0go.string.hdr."IsCreate"                       (go.string."IsCreate"   ş(go.string."IsCreate"    IsCreate  ş,go.string.hdr."IsMove"                       $go.string."IsMove"   ş$go.string."IsMove"   IsMove  ş,go.string.hdr."Change"                       $go.string."Change"   ş$go.string."Change"   Change  ştype."".Change    P       H       Tlç                                                                                                                                                                                                                              8                                       9                                       :                                       ;                                       @                                               40  &type..alg."".Change   @  &runtime.gcbits.4501   P  6go.string.hdr."main.Change"   p  type.*"".Change   €  "runtime.zerovalue   À type."".Change   À  ,go.string.hdr."Source"   à  type.string     (go.string.hdr."Path"   °  type.string   à  .go.string.hdr."ModDate"   €  type.time.Time   °  0go.string.hdr."IsDelete"   Ğ  type.bool   €  *go.string.hdr."IsMod"      type.bool   Ğ  0go.string.hdr."IsCreate"   ğ  type.bool      ,go.string.hdr."IsMove"   À  type.bool   ğ  0go.string.hdr."Checksum"     type.string   `À type."".Change   À  ,go.string.hdr."Change"   Ğ  "go.importpath."".   à type."".Change   ş8go.string.hdr."*main.Change"                       0go.string."*main.Change"   ş0go.string."*main.Change"    *main.Change  ştype.*"".Change                    }9¹H 6                                                        0   runtime.algarray   @  "runtime.gcbits.01   P  8go.string.hdr."*main.Change"   p  0go.weak.type.**"".Change   €  "runtime.zerovalue     type."".Change   ş.go.string.hdr."[]uint8"                       &go.string."[]uint8"   ş&go.string."[]uint8"   []uint8  ştype.[]uint8                   ß~.8                                                         0   runtime.algarray   @  "runtime.gcbits.01   P  .go.string.hdr."[]uint8"   p  *go.weak.type.*[]uint8   €  "runtime.zerovalue     type.uint8   ş6go.typelink.[]uint8	[]uint8              type.[]uint8   şTgclocalsÂ·33cdeccccebe80329f1fdbee7f5874cb           şTgclocalsÂ·0b86ef39f3fed835f14ba5f4d7c62fa2             şTgclocalsÂ·a8eabfc4a4514ed6b3b0c61e9680e440              şTgclocalsÂ·3bb21ca8fe1d99a3e492463bd711418a             ş<type..hashfunc.[2]interface {}              4type..hash.[2]interface {}   ş8type..eqfunc.[2]interface {}              0type..eq.[2]interface {}   ş2type..alg.[2]interface {}                        <type..hashfunc.[2]interface {}     8type..eqfunc.[2]interface {}   ş"runtime.gcbits.0f    ş>go.string.hdr."[2]interface {}"                       6go.string."[2]interface {}"   ş6go.string."[2]interface {}"     [2]interface {}  ş(type.[2]interface {} À  À                ,Y¤ñ                                                                        0  2type..alg.[2]interface {}   @  "runtime.gcbits.0f   P  >go.string.hdr."[2]interface {}"   p  :go.weak.type.*[2]interface {}   €  "runtime.zerovalue     "type.interface {}      &type.[]interface {}   şVgo.typelink.[2]interface {}	[2]interface {}              (type.[2]interface {}   ş@go.string.hdr."*[2]interface {}"                       8go.string."*[2]interface {}"   ş8go.string."*[2]interface {}" 0  "*[2]interface {}  ş*type.*[2]interface {}                   ¾s-q 6                                                        0   runtime.algarray   @  "runtime.gcbits.01   P  @go.string.hdr."*[2]interface {}"   p  <go.weak.type.**[2]interface {}   €  "runtime.zerovalue     (type.[2]interface {}   ş2go.string.hdr."chan bool"             	          *go.string."chan bool"   ş*go.string."chan bool"    chan bool  ştype.chan bool °  °              ¸Hßİ 2                                                               0   runtime.algarray   @  "runtime.gcbits.01   P  2go.string.hdr."chan bool"   p  .go.weak.type.*chan bool   €  "runtime.zerovalue     type.bool   ş>go.typelink.chan bool	chan bool              type.chan bool   ş"runtime.gcbits.02    ş<go.string.hdr."main.FileChunk"                       4go.string."main.FileChunk"   ş4go.string."main.FileChunk"    main.FileChunk  ş*go.string.hdr."Chunk"                       "go.string."Chunk"   ş"go.string."Chunk"   Chunk  ş2go.string.hdr."FileChunk"             	          *go.string."FileChunk"   ş*go.string."FileChunk"    FileChunk  ş"type."".FileChunk  °  °               ÔHM                                                                                                                                                                                              0à  runtime.algarray   @  "runtime.gcbits.02   P  <go.string.hdr."main.FileChunk"   p  $type.*"".FileChunk   €  "runtime.zerovalue   À "type."".FileChunk   À  *go.string.hdr."Order"   à  type.int     *go.string.hdr."Chunk"   °  type.[]uint8   `à "type."".FileChunk   à  2go.string.hdr."FileChunk"   ğ  "go.importpath."".   €° "type."".FileChunk   ş>go.string.hdr."*main.FileChunk"                       6go.string."*main.FileChunk"   ş6go.string."*main.FileChunk"     *main.FileChunk  ş$type.*"".FileChunk                    zA‘ 6                                                        0   runtime.algarray   @  "runtime.gcbits.01   P  >go.string.hdr."*main.FileChunk"   p  6go.weak.type.**"".FileChunk   €  "runtime.zerovalue     "type."".FileChunk   ş0go.string.hdr."[]string"                       (go.string."[]string"   ş(go.string."[]string"    []string  ştype.[]string                   Ó¨ó
-                                                         0   runtime.algarray   @  "runtime.gcbits.01   P  0go.string.hdr."[]string"   p  ,go.weak.type.*[]string   €  "runtime.zerovalue     type.string   ş:go.typelink.[]string	[]string              type.[]string   şTgclocalsÂ·33cdeccccebe80329f1fdbee7f5874cb           şTgclocalsÂ·0b86ef39f3fed835f14ba5f4d7c62fa2             şTgclocalsÂ·a8eabfc4a4514ed6b3b0c61e9680e440              şTgclocalsÂ·3bb21ca8fe1d99a3e492463bd711418a             ş0type..hashfunc.[2]string              (type..hash.[2]string   ş,type..eqfunc.[2]string              $type..eq.[2]string   ş&type..alg.[2]string                        0type..hashfunc.[2]string     ,type..eqfunc.[2]string   ş"runtime.gcbits.05    ş2go.string.hdr."[2]string"             	          *go.string."[2]string"   ş*go.string."[2]string"    [2]string  ştype.[2]string À  À               PXåé                                                                        0  &type..alg.[2]string   @  "runtime.gcbits.05   P  2go.string.hdr."[2]string"   p  .go.weak.type.*[2]string   €  "runtime.zerovalue     type.string      type.[]string   ş>go.typelink.[2]string	[2]string              type.[2]string   ş4go.string.hdr."*[2]string"             
-          ,go.string."*[2]string"   ş,go.string."*[2]string"    *[2]string  ştype.*[2]string                   f< 6                                                        0   runtime.algarray   @  "runtime.gcbits.01   P  4go.string.hdr."*[2]string"   p  0go.weak.type.**[2]string   €  "runtime.zerovalue     type.[2]string   şruntime.gcbits.      ş0go.string.hdr."[8]uint8"                       (go.string."[8]uint8"   ş(go.string."[8]uint8"    [8]uint8  ştype.[8]uint8 À  À               >ù0´ ‘                                                                       0   runtime.algarray   @  runtime.gcbits.   P  0go.string.hdr."[8]uint8"   p  ,go.weak.type.*[8]uint8   €  "runtime.zerovalue     type.uint8      type.[]uint8   ş:go.typelink.[8]uint8	[8]uint8              type.[8]uint8   şTgclocalsÂ·33cdeccccebe80329f1fdbee7f5874cb           şTgclocalsÂ·0b86ef39f3fed835f14ba5f4d7c62fa2             şTgclocalsÂ·a8eabfc4a4514ed6b3b0c61e9680e440              şTgclocalsÂ·3bb21ca8fe1d99a3e492463bd711418a             ş0type..hashfunc.[8]string              (type..hash.[8]string   ş,type..eqfunc.[8]string              $type..eq.[8]string   ş&type..alg.[8]string                        0type..hashfunc.[8]string     ,type..eqfunc.[8]string   ş&runtime.gcbits.5555   UU ş2go.string.hdr."[8]string"             	          *go.string."[8]string"   ş*go.string."[8]string"    [8]string  ştype.[8]string À  À€       x       USŒ>                                                                        0  &type..alg.[8]string   @  &runtime.gcbits.5555   P  2go.string.hdr."[8]string"   p  .go.weak.type.*[8]string   €  "runtime.zerovalue     type.string      type.[]string   ş>go.typelink.[8]string	[8]string              type.[8]string   ş6go.string.hdr."[]chan bool"                       .go.string."[]chan bool"   ş.go.string."[]chan bool"    []chan bool  ş type.[]chan bool                   õß…—                                                         0   runtime.algarray   @  "runtime.gcbits.01   P  6go.string.hdr."[]chan bool"   p  2go.weak.type.*[]chan bool   €  "runtime.zerovalue     type.chan bool   şFgo.typelink.[]chan bool	[]chan bool               type.[]chan bool   ş type..hashfunc64             @          ,runtime.memhash_varlen   ştype..eqfunc64             @          .runtime.memequal_varlen   ştype..alg64                         type..hashfunc64     type..eqfunc64   ş"runtime.gcbits.ff   ÿ ş8go.string.hdr."[8]chan bool"                       0go.string."[8]chan bool"   ş0go.string."[8]chan bool"    [8]chan bool  ş"type.[8]chan bool À  À@       @       À‰V                                                                        0  type..alg64   @  "runtime.gcbits.ff   P  8go.string.hdr."[8]chan bool"   p  4go.weak.type.*[8]chan bool   €  "runtime.zerovalue     type.chan bool       type.[]chan bool   şJgo.typelink.[8]chan bool	[8]chan bool              "type.[8]chan bool   şXgo.string.hdr."*map.bucket[string]chan bool"                       Pgo.string."*map.bucket[string]chan bool"   şPgo.string."*map.bucket[string]chan bool" @  :*map.bucket[string]chan bool  şBtype.*map.bucket[string]chan bool                   4·!V 6                                                        0   runtime.algarray   @  "runtime.gcbits.01   P  Xgo.string.hdr."*map.bucket[string]chan bool"   p  Tgo.weak.type.**map.bucket[string]chan bool   €  "runtime.zerovalue     @type.map.bucket[string]chan bool   ş.runtime.gcbits.aaaafe03   ªªş şVgo.string.hdr."map.bucket[string]chan bool"                       Ngo.string."map.bucket[string]chan bool"   şNgo.string."map.bucket[string]chan bool" @  8map.bucket[string]chan bool  ş.go.string.hdr."topbits"                       &go.string."topbits"   ş&go.string."topbits"   topbits  ş(go.string.hdr."keys"                        go.string."keys"   ş go.string."keys"   
-keys  ş,go.string.hdr."values"                       $go.string."values"   ş$go.string."values"   values  ş0go.string.hdr."overflow"                       (go.string."overflow"   ş(go.string."overflow"    overflow  ş@type.map.bucket[string]chan bool €  €Ğ       Ğ       ,m—À                                                                                                                                                                                      ˆ                                       È       0à  runtime.algarray   @  .runtime.gcbits.aaaafe03   P  Vgo.string.hdr."map.bucket[string]chan bool"   p  Rgo.weak.type.*map.bucket[string]chan bool   €  "runtime.zerovalue   À @type.map.bucket[string]chan bool   À  .go.string.hdr."topbits"   à  type.[8]uint8     (go.string.hdr."keys"   °  type.[8]string   à  ,go.string.hdr."values"   €  "type.[8]chan bool   °  0go.string.hdr."overflow"   Ğ  Btype.*map.bucket[string]chan bool   ş"runtime.gcbits.2c   , şPgo.string.hdr."map.hdr[string]chan bool"                       Hgo.string."map.hdr[string]chan bool"   şHgo.string."map.hdr[string]chan bool" @  2map.hdr[string]chan bool  ş*go.string.hdr."count"                       "go.string."count"   ş"go.string."count"   count  ş*go.string.hdr."flags"                       "go.string."flags"   ş"go.string."flags"   flags  ş"go.string.hdr."B"                       go.string."B"   şgo.string."B"   B  ş*go.string.hdr."hash0"                       "go.string."hash0"   ş"go.string."hash0"   hash0  ş.go.string.hdr."buckets"                       &go.string."buckets"   ş&go.string."buckets"   buckets  ş4go.string.hdr."oldbuckets"             
-          ,go.string."oldbuckets"   ş,go.string."oldbuckets"    oldbuckets  ş2go.string.hdr."nevacuate"             	          *go.string."nevacuate"   ş*go.string."nevacuate"    nevacuate  ş:type.map.hdr[string]chan bool À  À0       0       ××ev                                                                                                                                                                                      	                                                                                                                                                                                                    (       ,0à  runtime.algarray   @  "runtime.gcbits.2c   P  Pgo.string.hdr."map.hdr[string]chan bool"   p  Lgo.weak.type.*map.hdr[string]chan bool   €  "runtime.zerovalue   À :type.map.hdr[string]chan bool   À  *go.string.hdr."count"   à  type.int     *go.string.hdr."flags"   °  type.uint8   à  "go.string.hdr."B"   €  type.uint8   °  *go.string.hdr."hash0"   Ğ  type.uint32   €  .go.string.hdr."buckets"      Btype.*map.bucket[string]chan bool   Ğ  4go.string.hdr."oldbuckets"   ğ  Btype.*map.bucket[string]chan bool      2go.string.hdr."nevacuate"   À  type.uintptr   ğ  0go.string.hdr."overflow"     &type.unsafe.Pointer   şHgo.string.hdr."map[string]chan bool"                       @go.string."map[string]chan bool"   ş@go.string."map[string]chan bool" 0  *map[string]chan bool  ş2type.map[string]chan bool Ş  Ş              #Ì\¨ 5                                                                                  Ğ 0€  runtime.algarray   @  "runtime.gcbits.01   P  Hgo.string.hdr."map[string]chan bool"   p  Dgo.weak.type.*map[string]chan bool   €  "runtime.zerovalue     type.string      type.chan bool   °  @type.map.bucket[string]chan bool   À  :type.map.hdr[string]chan bool   şjgo.typelink.map[string]chan bool	map[string]chan bool              2type.map[string]chan bool   ş4go.string.hdr."*chan bool"             
-          ,go.string."*chan bool"   ş,go.string."*chan bool"    *chan bool  ştype.*chan bool                   Ä²Ë 6                                                        0   runtime.algarray   @  "runtime.gcbits.01   P  4go.string.hdr."*chan bool"   p  0go.weak.type.**chan bool   €  "runtime.zerovalue     type.chan bool   ş8go.string.hdr."chan []uint8"                       0go.string."chan []uint8"   ş0go.string."chan []uint8"    chan []uint8  ş"type.chan []uint8 °  °              ‚ÇÓ 2                                                               0   runtime.algarray   @  "runtime.gcbits.01   P  8go.string.hdr."chan []uint8"   p  4go.weak.type.*chan []uint8   €  "runtime.zerovalue     type.[]uint8   şJgo.typelink.chan []uint8	chan []uint8              "type.chan []uint8   şPgo.string.hdr."chan *fsnotify.FileEvent"                       Hgo.string."chan *fsnotify.FileEvent"   şHgo.string."chan *fsnotify.FileEvent" @  2chan *fsnotify.FileEvent  ş^type.chan *github.com/howeyc/fsnotify.FileEvent °  °              !&g 2                                                               0   runtime.algarray   @  "runtime.gcbits.01   P  Pgo.string.hdr."chan *fsnotify.FileEvent"   p  pgo.weak.type.*chan *github.com/howeyc/fsnotify.FileEvent   €  "runtime.zerovalue     Ttype.*github.com/howeyc/fsnotify.FileEvent   şgo.typelink.chan *fsnotify.FileEvent	chan *github.com/howeyc/fsnotify.FileEvent              ^type.chan *github.com/howeyc/fsnotify.FileEvent   ş4go.string.hdr."chan error"             
-          ,go.string."chan error"   ş,go.string."chan error"    chan error  ştype.chan error °  °              "Èû] 2                                                               0   runtime.algarray   @  "runtime.gcbits.01   P  4go.string.hdr."chan error"   p  0go.weak.type.*chan error   €  "runtime.zerovalue     type.error   şBgo.typelink.chan error	chan error              type.chan error   ş"runtime.gcbits.13    ş$"".hdr..gostring.1             m          ""..gostring.1   ş""..gostring.1 à  Üstruct { elem *uint8; chan *uint8; pc uintptr; kind uint16; so uint16; receivedp *uint8; releasetime uint64 }  ş(go.string.hdr."elem"                        go.string."elem"   ş go.string."elem"   
-elem  ş(go.string.hdr."chan"                        go.string."chan"   ş go.string."chan"   
-chan  ş$go.string.hdr."pc"                       go.string."pc"   şgo.string."pc"   pc  ş(go.string.hdr."kind"                        go.string."kind"   ş go.string."kind"   
-kind  ş$go.string.hdr."so"                       go.string."so"   şgo.string."so"   so  ş2go.string.hdr."receivedp"             	          *go.string."receivedp"   ş*go.string."receivedp"    receivedp  ş6go.string.hdr."releasetime"                       .go.string."releasetime"   ş.go.string."releasetime"    releasetime  şätype.struct { elem *uint8; chan *uint8; pc uintptr; kind uint16; so uint16; receivedp *uint8; releasetime uint64 } ğ  ğ0       (       ¦F                                                                                                                                                                                                                                                                                                                                                   (       60à  runtime.algarray   @  "runtime.gcbits.13   P  $"".hdr..gostring.1   p  ögo.weak.type.*struct { elem *uint8; chan *uint8; pc uintptr; kind uint16; so uint16; receivedp *uint8; releasetime uint64 }   €  "runtime.zerovalue   À ätype.struct { elem *uint8; chan *uint8; pc uintptr; kind uint16; so uint16; receivedp *uint8; releasetime uint64 }   À  (go.string.hdr."elem"   Ğ  "go.importpath."".   à  type.*uint8     (go.string.hdr."chan"      "go.importpath."".   °  type.*uint8   à  $go.string.hdr."pc"   ğ  "go.importpath."".   €  type.uintptr   °  (go.string.hdr."kind"   À  "go.importpath."".   Ğ  type.uint16   €  $go.string.hdr."so"     "go.importpath."".      type.uint16   Ğ  2go.string.hdr."receivedp"   à  "go.importpath."".   ğ  type.*uint8      6go.string.hdr."releasetime"   °  "go.importpath."".   À  type.uint64   ş$"".hdr..gostring.2             o          ""..gostring.2   ş""..gostring.2 à  à[]struct { elem *uint8; chan *uint8; pc uintptr; kind uint16; so uint16; receivedp *uint8; releasetime uint64 }  şètype.[]struct { elem *uint8; chan *uint8; pc uintptr; kind uint16; so uint16; receivedp *uint8; releasetime uint64 }                   §¢%Ü                                                         0   runtime.algarray   @  "runtime.gcbits.01   P  $"".hdr..gostring.2   p  úgo.weak.type.*[]struct { elem *uint8; chan *uint8; pc uintptr; kind uint16; so uint16; receivedp *uint8; releasetime uint64 }   €  "runtime.zerovalue     ätype.struct { elem *uint8; chan *uint8; pc uintptr; kind uint16; so uint16; receivedp *uint8; releasetime uint64 }   şÖgo.typelink.[]struct { elem *uint8; chan *uint8; pc uintptr; kind uint16; so uint16; receivedp *uint8; releasetime uint64 }	[]struct { elem *uint8; chan *uint8; pc uintptr; kind uint16; so uint16; receivedp *uint8; releasetime uint64 }              ètype.[]struct { elem *uint8; chan *uint8; pc uintptr; kind uint16; so uint16; receivedp *uint8; releasetime uint64 }   ş&runtime.gcbits.d304   Ó ş$"".hdr..gostring.3             p          ""..gostring.3   ş""..gostring.3 ğ  â[2]struct { elem *uint8; chan *uint8; pc uintptr; kind uint16; so uint16; receivedp *uint8; releasetime uint64 }  şêtype.[2]struct { elem *uint8; chan *uint8; pc uintptr; kind uint16; so uint16; receivedp *uint8; releasetime uint64 } À  À`       X       ÿã*ƒ                                                                        0à  runtime.algarray   @  &runtime.gcbits.d304   P  $"".hdr..gostring.3   p  ügo.weak.type.*[2]struct { elem *uint8; chan *uint8; pc uintptr; kind uint16; so uint16; receivedp *uint8; releasetime uint64 }   €  "runtime.zerovalue     ätype.struct { elem *uint8; chan *uint8; pc uintptr; kind uint16; so uint16; receivedp *uint8; releasetime uint64 }      ètype.[]struct { elem *uint8; chan *uint8; pc uintptr; kind uint16; so uint16; receivedp *uint8; releasetime uint64 }   şÚgo.typelink.[2]struct { elem *uint8; chan *uint8; pc uintptr; kind uint16; so uint16; receivedp *uint8; releasetime uint64 }	[2]struct { elem *uint8; chan *uint8; pc uintptr; kind uint16; so uint16; receivedp *uint8; releasetime uint64 }              êtype.[2]struct { elem *uint8; chan *uint8; pc uintptr; kind uint16; so uint16; receivedp *uint8; releasetime uint64 }   ş0go.string.hdr."[]*uint8"                       (go.string."[]*uint8"   ş(go.string."[]*uint8"    []*uint8  ştype.[]*uint8                   …Íü                                                         0   runtime.algarray   @  "runtime.gcbits.01   P  0go.string.hdr."[]*uint8"   p  ,go.weak.type.*[]*uint8   €  "runtime.zerovalue     type.*uint8   ş:go.typelink.[]*uint8	[]*uint8              type.[]*uint8   ş2go.string.hdr."[2]*uint8"             	          *go.string."[2]*uint8"   ş*go.string."[2]*uint8"    [2]*uint8  ştype.[2]*uint8 À  À              ¡ğV                                                                        0À  runtime.algarray   @  "runtime.gcbits.03   P  2go.string.hdr."[2]*uint8"   p  .go.weak.type.*[2]*uint8   €  "runtime.zerovalue     type.*uint8      type.[]*uint8   ş>go.typelink.[2]*uint8	[2]*uint8              type.[2]*uint8   ş0go.string.hdr."[]uint16"                       (go.string."[]uint16"   ş(go.string."[]uint16"    []uint16  ştype.[]uint16                   çã                                                          0   runtime.algarray   @  "runtime.gcbits.01   P  0go.string.hdr."[]uint16"   p  ,go.weak.type.*[]uint16   €  "runtime.zerovalue     type.uint16   ş:go.typelink.[]uint16	[]uint16              type.[]uint16   ş2go.string.hdr."[2]uint16"             	          *go.string."[2]uint16"   ş*go.string."[2]uint16"    [2]uint16  ştype.[2]uint16 À  À                ÎUI ‘                                                                       0€  runtime.algarray   @  runtime.gcbits.   P  2go.string.hdr."[2]uint16"   p  .go.weak.type.*[2]uint16   €  "runtime.zerovalue     type.uint16      type.[]uint16   ş>go.typelink.[2]uint16	[2]uint16              type.[2]uint16   ş*runtime.gcbits.9ea601   ¦ ş$"".hdr..gostring.4             ñ          ""..gostring.4   ş""..gostring.4 ğ  ästruct { tcase uint16; ncase uint16; pollorder *uint8; lockorder *uint8; scase [2]struct { elem *uint8; chan *uint8; pc uintptr; kind uint16; so uint16; receivedp *uint8; releasetime uint64 }; lockorderarr [2]*uint8; pollorderarr [2]uint16 }  ş*go.string.hdr."tcase"                       "go.string."tcase"   ş"go.string."tcase"   tcase  ş*go.string.hdr."ncase"                       "go.string."ncase"   ş"go.string."ncase"   ncase  ş2go.string.hdr."pollorder"             	          *go.string."pollorder"   ş*go.string."pollorder"    pollorder  ş2go.string.hdr."lockorder"             	          *go.string."lockorder"   ş*go.string."lockorder"    lockorder  ş*go.string.hdr."scase"                       "go.string."scase"   ş"go.string."scase"   scase  ş8go.string.hdr."lockorderarr"                       0go.string."lockorderarr"   ş0go.string."lockorderarr"    lockorderarr  ş8go.string.hdr."pollorderarr"                       0go.string."pollorderarr"   ş0go.string."pollorderarr"    pollorderarr  şìtype.struct { tcase uint16; ncase uint16; pollorder *uint8; lockorder *uint8; scase [2]struct { elem *uint8; chan *uint8; pc uintptr; kind uint16; so uint16; receivedp *uint8; releasetime uint64 }; lockorderarr [2]*uint8; pollorderarr [2]uint16 } ğ  ğ       ˆ       ©Ûxá                                                                                                                                                                                                                                                                                                           x                                       ˆ       60à  runtime.algarray   @  *runtime.gcbits.9ea601   P  $"".hdr..gostring.4   p  şgo.weak.type.*struct { tcase uint16; ncase uint16; pollorder *uint8; lockorder *uint8; scase [2]struct { elem *uint8; chan *uint8; pc uintptr; kind uint16; so uint16; receivedp *uint8; releasetime uint64 }; lockorderarr [2]*uint8; pollorderarr [2]uint16 }   €  "runtime.zerovalue   À ìtype.struct { tcase uint16; ncase uint16; pollorder *uint8; lockorder *uint8; scase [2]struct { elem *uint8; chan *uint8; pc uintptr; kind uint16; so uint16; receivedp *uint8; releasetime uint64 }; lockorderarr [2]*uint8; pollorderarr [2]uint16 }   À  *go.string.hdr."tcase"   Ğ  "go.importpath."".   à  type.uint16     *go.string.hdr."ncase"      "go.importpath."".   °  type.uint16   à  2go.string.hdr."pollorder"   ğ  "go.importpath."".   €  type.*uint8   °  2go.string.hdr."lockorder"   À  "go.importpath."".   Ğ  type.*uint8   €  *go.string.hdr."scase"     "go.importpath."".      êtype.[2]struct { elem *uint8; chan *uint8; pc uintptr; kind uint16; so uint16; receivedp *uint8; releasetime uint64 }   Ğ  8go.string.hdr."lockorderarr"   à  "go.importpath."".   ğ  type.[2]*uint8      8go.string.hdr."pollorderarr"   °  "go.importpath."".   À  type.[2]uint16   ş4go.string.hdr."*[8]string"             
-          ,go.string."*[8]string"   ş,go.string."*[8]string"    *[8]string  ştype.*[8]string                   ­”o 6                                                        0   runtime.algarray   @  "runtime.gcbits.01   P  4go.string.hdr."*[8]string"   p  0go.weak.type.**[8]string   €  "runtime.zerovalue     type.[8]string   ş.go.string.hdr."runtime"                       &go.string."runtime"   ş&go.string."runtime"   runtime  ş,go.importpath.runtime.                       &go.string."runtime"   ş:go.string.hdr."encoding/json"                       2go.string."encoding/json"   ş2go.string."encoding/json"    encoding/json  ş8go.importpath.encoding/json.                       2go.string."encoding/json"   ş$go.string.hdr."io"                       go.string."io"   şgo.string."io"   io  ş"go.importpath.io.                       go.string."io"   ş.go.string.hdr."strconv"                       &go.string."strconv"   ş&go.string."strconv"   strconv  ş,go.importpath.strconv.                       &go.string."strconv"   ş&go.string.hdr."fmt"                       go.string."fmt"   şgo.string."fmt"   fmt  ş$go.importpath.fmt.                       go.string."fmt"   ş(go.string.hdr."math"                        go.string."math"   ş go.string."math"   
-math  ş&go.importpath.math.                        go.string."math"   ş(go.string.hdr."sync"                        go.string."sync"   ş go.string."sync"   
-sync  ş&go.importpath.sync.                        go.string."sync"   ş$go.string.hdr."os"                       go.string."os"   şgo.string."os"   os  ş"go.importpath.os.                       go.string."os"   ş&go.string.hdr."log"                       go.string."log"   şgo.string."log"   log  ş$go.importpath.log.                       go.string."log"   ş(go.string.hdr."time"                        go.string."time"   ş go.string."time"   
-time  ş&go.importpath.time.                        go.string."time"   ş:go.string.hdr."path/filepath"                       2go.string."path/filepath"   ş2go.string."path/filepath"    path/filepath  ş8go.importpath.path/filepath.                       2go.string."path/filepath"   şZgo.string.hdr."github.com/blockloop/unison/q"                       Rgo.string."github.com/blockloop/unison/q"   şRgo.string."github.com/blockloop/unison/q" @  <github.com/blockloop/unison/q  şXgo.importpath.github.com/blockloop/unison/q.                       Rgo.string."github.com/blockloop/unison/q"   şRgo.string.hdr."github.com/streadway/amqp"                       Jgo.string."github.com/streadway/amqp"   şJgo.string."github.com/streadway/amqp" @  4github.com/streadway/amqp  şPgo.importpath.github.com/streadway/amqp.                       Jgo.string."github.com/streadway/amqp"   ş4go.string.hdr."crypto/md5"             
-          ,go.string."crypto/md5"   ş,go.string."crypto/md5"    crypto/md5  ş2go.importpath.crypto/md5.             
-          ,go.string."crypto/md5"   şTgo.string.hdr."github.com/howeyc/fsnotify"                       Lgo.string."github.com/howeyc/fsnotify"   şLgo.string."github.com/howeyc/fsnotify" @  6github.com/howeyc/fsnotify  şRgo.importpath.github.com/howeyc/fsnotify.                       Lgo.string."github.com/howeyc/fsnotify"   ş:type..hash.[1]interface {}Â·f              4type..hash.[1]interface {}   ş6type..eq.[1]interface {}Â·f              0type..eq.[1]interface {}   ş:type..hash.[3]interface {}Â·f              4type..hash.[3]interface {}   ş6type..eq.[3]interface {}Â·f              0type..eq.[3]interface {}   ş2type..hash."".TransferÂ·f              ,type..hash."".Transfer   ş.type..eq."".TransferÂ·f              (type..eq."".Transfer   ş.type..hash."".ChangeÂ·f              (type..hash."".Change   ş*type..eq."".ChangeÂ·f              $type..eq."".Change   ş:type..hash.[2]interface {}Â·f              4type..hash.[2]interface {}   ş6type..eq.[2]interface {}Â·f              0type..eq.[2]interface {}   ş.type..hash.[2]stringÂ·f              (type..hash.[2]string   ş*type..eq.[2]stringÂ·f              $type..eq.[2]string   ş.type..hash.[8]stringÂ·f              (type..hash.[8]string   ş*type..eq.[8]stringÂ·f              $type..eq.[8]string   ş"runtime.zerovalue      ÿÿgo13ld
